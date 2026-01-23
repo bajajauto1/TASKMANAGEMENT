@@ -7,193 +7,95 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        :root { 
-            --primary: #2c3e50; 
-            --secondary: #34495e; 
-            --accent: #3498db; 
-            --light: #f4f7f6; 
-            --success: #27ae60; 
-            --danger: #e74c3c; 
-            --warning: #f1c40f; 
+        :root { --primary: #2c3e50; --secondary: #34495e; --accent: #3498db; --light: #ecf0f1; --success: #27ae60; --danger: #e74c3c; --warning: #f1c40f; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--light); margin: 0; padding: 10px; }
+        .container { max-width: 1200px; margin: auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        .hidden { display: none; }
+        h2 { color: var(--primary); border-bottom: 3px solid var(--accent); padding-bottom: 10px; font-size: 1.4rem; }
+        .card { background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ddd; }
+        input, select, button { padding: 12px; margin: 8px 0; width: 100%; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; box-sizing: border-box; }
+        button { background: var(--accent); color: white; border: none; cursor: pointer; font-weight: bold; }
+        button.delete { background: var(--danger); width: 100%; padding: 10px; font-size: 14px; margin-top: 5px; }
+        button.logout { background: var(--secondary); width: auto; float: right; padding: 8px 15px; margin-top: -50px; }
+        
+        /* TABLE STYLING */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+        th, td { border: 1px solid #eee; padding: 12px; text-align: left; }
+        th { background: var(--primary); color: white; }
+
+        /* MOBILE RESPONSIVE TABLE (THE FIX) */
+        @media screen and (max-width: 768px) {
+            table, thead, tbody, th, td, tr { display: block; }
+            thead tr { position: absolute; top: -9999px; left: -9999px; }
+            tr { border: 1px solid #ccc; margin-bottom: 15px; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+            td { border: none; border-bottom: 1px solid #eee; position: relative; padding-left: 50% !important; text-align: right; }
+            td:before { 
+                position: absolute; left: 10px; width: 45%; padding-right: 10px; 
+                white-space: nowrap; font-weight: bold; text-align: left;
+                content: attr(data-label); color: var(--secondary);
+            }
+            button.logout { float: none; width: 100%; margin-top: 10px; }
+            .flex-row { flex-direction: column; }
         }
 
-        body { 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            background: var(--light); 
-            margin: 0; 
-            padding: 0; 
-            color: #333;
-        }
-
-        .container { 
-            max-width: 100%; 
-            margin: auto; 
-            padding: 15px; 
-            box-sizing: border-box;
-        }
-
-        .hidden { display: none !important; }
-
-        /* Typography */
-        h2 { color: var(--primary); font-size: 1.5rem; margin-bottom: 20px; text-align: center; }
-        h3 { font-size: 1.1rem; margin-top: 0; }
-
-        /* Cards */
-        .card { 
-            background: white; 
-            padding: 20px; 
-            border-radius: 12px; 
-            margin-bottom: 20px; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            border: 1px solid #eee;
-        }
-
-        /* Forms */
-        input, select, button { 
-            padding: 14px; 
-            margin: 8px 0; 
-            width: 100%; 
-            border: 1px solid #ddd; 
-            border-radius: 8px; 
-            font-size: 16px; /* Prevents iOS zoom on focus */
-            box-sizing: border-box; 
-            display: block;
-        }
-
-        button { 
-            background: var(--accent); 
-            color: white; 
-            border: none; 
-            cursor: pointer; 
-            font-weight: 600; 
-            transition: background 0.3s;
-        }
-
-        button:active { transform: scale(0.98); }
-
-        .logout { 
-            background: var(--danger); 
-            width: auto; 
-            padding: 8px 15px; 
-            font-size: 14px;
-            float: right;
-            margin-top: -50px;
-        }
-
-        /* Dashboard Stats */
-        .flex-row { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 10px; 
-            margin-bottom: 15px; 
-        }
-
-        .stat-box { 
-            padding: 12px 5px; 
-            border-radius: 8px; 
-            color: white; 
-            text-align: center; 
-        }
-        .stat-box small { font-size: 10px; display: block; margin-bottom: 5px; }
-        .stat-box b { font-size: 20px; }
-
-        /* Responsive Table Replacement */
-        .task-list-item {
-            background: #fff;
-            border: 1px solid #eee;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 10px;
-            position: relative;
-        }
-
-        /* Table view for Desktop, List view for Mobile */
-        @media (max-width: 768px) {
-            table thead { display: none; }
-            table, tbody, tr, td { display: block; width: 100%; }
-            tr { margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; background: white; padding: 10px; }
-            td { text-align: right; padding-left: 50%; position: relative; border: none; border-bottom: 1px solid #eee; }
-            td::before { content: attr(data-label); position: absolute; left: 10px; width: 45%; font-weight: bold; text-align: left; }
-            .flex-row { grid-template-columns: 1fr; }
-            .logout { float: none; width: 100%; margin-top: 0; margin-bottom: 20px; }
-        }
-
-        @media (min-width: 769px) {
-            .container { max-width: 900px; padding: 40px 20px; }
-            .flex-row-admin { display: flex; gap: 20px; }
-            .flex-row-admin .card { flex: 1; }
-            table { width: 100%; border-collapse: collapse; }
-            th, td { border: 1px solid #eee; padding: 12px; text-align: left; }
-            th { background: var(--primary); color: white; }
-        }
-
-        .status-tag { 
-            padding: 4px 8px; 
-            border-radius: 4px; 
-            font-size: 11px; 
-            font-weight: bold; 
-        }
-        .Initial { background: #eee; color: #666; }
-        .In-Process { background: var(--warning); color: #000; }
-        .Completed { background: var(--success); color: #fff; }
-
-        .progress-container { width: 100%; background: #eee; border-radius: 10px; height: 10px; overflow: hidden; display: flex; margin: 10px 0; }
+        .status-tag { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .Initial { background: #bdc3c7; color: #333; }
+        .In-Process { background: var(--warning); color: #333; }
+        .Completed { background: var(--success); color: white; }
+        .flex-row { display: flex; gap: 15px; flex-wrap: wrap; }
+        .stat-box { flex: 1; padding: 15px; border-radius: 8px; color: white; text-align: center; min-width: 100px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div id="login-section">
-        <h2>BAJAJ TASK SYSTEM</h2>
-        <div class="card" style="border-top: 5px solid var(--accent);">
-            <input type="text" id="login-id" placeholder="ADMIN, ASO-1, ASO-2 or Emp Code">
+        <h2 style="text-align:center">BAJAJ TASK SYSTEM</h2>
+        <div class="card" style="max-width: 400px; margin: auto; border-top: 5px solid var(--accent);">
+            <input type="text" id="login-id" placeholder="Enter ADMIN, ASO-1, ASO-2 or Emp Code">
             <button onclick="handleLogin()">Access Dashboard</button>
         </div>
     </div>
 
     <div id="admin-dashboard" class="hidden">
         <button class="logout" onclick="logout()">Logout</button>
-        <h2>Admin Panel</h2>
+        <h2 id="admin-title">Admin Management</h2>
         
-        <div class="card">
-            <h3>📊 Live Team Report</h3>
+        <div class="card" style="border-left: 5px solid var(--success);">
+            <h3>📊 Real-time Report</h3>
             <div class="flex-row">
-                <div class="stat-box" style="background: #95a5a6;"><small>INITIAL</small><b id="stat-initial">0</b></div>
-                <div class="stat-box" style="background: var(--warning); color: #333;"><small>IN-PROGRESS</small><b id="stat-progress">0</b></div>
-                <div class="stat-box" style="background: var(--success);"><small>COMPLETED</small><b id="stat-completed">0</b></div>
+                <div class="stat-box" style="background: #7f8c8d;"><small>INITIAL</small><br><span id="stat-initial" style="font-size: 24px;">0</span></div>
+                <div class="stat-box" style="background: var(--warning); color: #333;"><small>IN-PROGRESS</small><br><span id="stat-progress" style="font-size: 24px;">0</span></div>
+                <div class="stat-box" style="background: var(--success);"><small>COMPLETED</small><br><span id="stat-completed" style="font-size: 24px;">0</span></div>
             </div>
-            <div class="progress-container">
-                <div id="bar-initial" style="background: #bdc3c7; width: 0%;"></div>
-                <div id="bar-progress" style="background: var(--warning); width: 0%;"></div>
-                <div id="bar-completed" style="background: var(--success); width: 0%;"></div>
-            </div>
-            <p id="completion-text" style="text-align: center; font-size: 13px; margin: 0;">0% Completion Rate</p>
+            <p id="completion-text" style="text-align: center; font-weight: bold; font-size: 13px; margin-top:10px;">0% Completion Rate</p>
         </div>
 
-        <div class="flex-row-admin">
-            <div class="card">
-                <h3>User Management</h3>
+        <div class="flex-row">
+            <div class="card" style="flex: 1; border-top: 4px solid var(--primary);">
+                <h3>Manage Employees</h3>
                 <input type="text" id="emp-name" placeholder="Full Name">
                 <input type="text" id="emp-code" placeholder="Login Code">
                 <input type="text" id="emp-designation" placeholder="Designation">
-                <button onclick="saveEmployee()">Save Employee</button>
+                <button onclick="saveEmployee()">Register/Update</button>
             </div>
-            <div class="card">
-                <h3>Assign Task</h3>
+            <div class="card" style="flex: 1; border-top: 4px solid var(--accent);">
+                <h3>Assign New Task</h3>
                 <select id="task-assignee"></select>
-                <input type="text" id="task-name" placeholder="Task details...">
-                <button onclick="assignTask()" style="background: var(--success);">Assign Now</button>
+                <input type="text" id="task-name" placeholder="Describe Task">
+                <button onclick="assignTask()" style="background: var(--success);">Assign Task</button>
             </div>
         </div>
         
-        <button onclick="exportCSV()" style="background: var(--secondary);">⬇️ Download CSV Report</button>
+        <button onclick="exportCSV()" style="background: #27ae60; margin: 10px 0;">📊 Download CSV Report</button>
 
-        <h3>Monitoring</h3>
+        <h3>Live Monitoring Table</h3>
         <table id="admin-table">
             <thead>
                 <tr>
-                    <th>Staff</th>
-                    <th>Task</th>
+                    <th>Emp Code</th>
+                    <th>Name</th>
+                    <th>Task Name</th>
                     <th>Status</th>
                     <th>Action</th>
                 </tr>
@@ -204,19 +106,19 @@
 
     <div id="employee-dashboard" class="hidden">
         <button class="logout" onclick="logout()">Logout</button>
-        <h2 style="text-align:left">Hi, <span id="display-emp-name"></span></h2>
+        <h2>Welcome, <span id="display-emp-name"></span></h2>
         <div class="card">
-            <h3 style="border-bottom: 1px solid #eee; padding-bottom:10px">My Active Tasks</h3>
-            <div id="emp-list-mobile">
-                </div>
-            <table id="emp-table" class="hidden"> <tbody id="emp-list"></tbody>
+            <h3>My Tasks</h3>
+            <table id="emp-table">
+                <thead><tr><th>Task</th><th>Action</th></tr></thead>
+                <tbody id="emp-list"></tbody>
             </table>
         </div>
     </div>
 </div>
 
 <script>
-    // Config stays the same as your original
+    // Config stays the same
     const firebaseConfig = {
         apiKey: "AIzaSyAmQil4nkkdp98pAYCILemHxRTYCAy5nEw",
         authDomain: "taskmanager-45c3a.firebaseapp.com",
@@ -234,18 +136,13 @@
 
     function handleLogin() {
         const id = document.getElementById('login-id').value.trim();
-        if(!id) return alert("Please enter a code");
-        
         if(id === 'ADMIN00001' || id === 'ASO-1' || id === 'ASO-2') {
             currentUser = { role: 'admin', id: id };
             showDashboard('admin');
         } else {
             db.ref('employees/' + id).once('value', snap => {
-                if(snap.exists()) { 
-                    currentUser = snap.val(); 
-                    showDashboard('employee'); 
-                }
-                else { alert("User not found."); }
+                if(snap.exists()) { currentUser = snap.val(); showDashboard('employee'); }
+                else { alert("Login failed."); }
             });
         }
     }
@@ -267,12 +164,9 @@
         const code = document.getElementById('emp-code').value;
         const designation = document.getElementById('emp-designation').value;
         if(name && code) {
-            db.ref('employees/' + code).set({ name, code, designation })
-            .then(() => {
-                alert("Employee Updated!");
-                document.getElementById('emp-name').value = '';
-                document.getElementById('emp-code').value = '';
-            });
+            db.ref('employees/' + code).set({ name, code, designation });
+            alert("Saved!");
+            document.getElementById('emp-name').value = ''; document.getElementById('emp-code').value = '';
         }
     }
 
@@ -280,11 +174,7 @@
         const code = document.getElementById('task-assignee').value;
         const task = document.getElementById('task-name').value;
         if(task) {
-            db.ref('tasks/' + code).push({ 
-                taskName: task, 
-                status: 'Initial', 
-                date: new Date().toLocaleDateString() 
-            });
+            db.ref('tasks/' + code).push({ taskName: task, status: 'Initial', date: new Date().toLocaleDateString() });
             document.getElementById('task-name').value = "";
             alert("Task Assigned!");
         }
@@ -294,9 +184,7 @@
         db.ref('employees').on('value', snap => {
             let opts = "";
             globalEmpData = snap.val() || {}; 
-            snap.forEach(e => {
-                opts += `<option value="${e.key}">${e.val().name}</option>`;
-            });
+            snap.forEach(e => { opts += `<option value="${e.key}">${e.val().name}</option>`; });
             document.getElementById('task-assignee').innerHTML = opts;
         });
 
@@ -307,15 +195,17 @@
                 empTasks.forEach(tSnap => {
                     const t = tSnap.val(); total++;
                     if(t.status==='Initial') i++; else if(t.status==='In-Process') p++; else c++;
+                    // Added data-label for mobile view
                     rows += `<tr>
-                        <td data-label="Staff"><b>${details.name}</b><br><small>${empTasks.key}</small></td>
-                        <td data-label="Task">${t.taskName}</td>
+                        <td data-label="Emp Code"><b>${empTasks.key}</b></td>
+                        <td data-label="Name">${details.name}</td>
+                        <td data-label="Task Name">${t.taskName}</td>
                         <td data-label="Status"><span class="status-tag ${t.status}">${t.status}</span></td>
-                        <td data-label="Action"><button style="background:var(--danger); font-size:12px; padding:5px;" onclick="deleteTask('${empTasks.key}','${tSnap.key}')">Delete</button></td>
+                        <td data-label="Action"><button class="delete" onclick="deleteTask('${empTasks.key}','${tSnap.key}')">Delete</button></td>
                     </tr>`;
                 });
             });
-            document.getElementById('admin-list').innerHTML = rows || "<tr><td colspan='4'>No tasks found</td></tr>";
+            document.getElementById('admin-list').innerHTML = rows;
             updateStats(i, p, c, total);
         });
     }
@@ -324,62 +214,38 @@
         document.getElementById('stat-initial').innerText = i;
         document.getElementById('stat-progress').innerText = p;
         document.getElementById('stat-completed').innerText = c;
-        if(total > 0) {
-            const perc = Math.round(c/total*100);
-            document.getElementById('bar-initial').style.width = (i/total*100) + "%";
-            document.getElementById('bar-progress').style.width = (p/total*100) + "%";
-            document.getElementById('bar-completed').style.width = (c/total*100) + "%";
-            document.getElementById('completion-text').innerText = perc + "% Completion (" + total + " total)";
-        }
+        if(total > 0) document.getElementById('completion-text').innerText = Math.round(c/total*100) + "% Team Completion Rate";
     }
 
     function loadEmployeeTasks() {
         db.ref('tasks/' + currentUser.code).on('value', snap => {
-            let html = "";
+            let rows = "";
             snap.forEach(tSnap => {
                 const t = tSnap.val(); const tid = tSnap.key;
-                html += `
-                <div class="task-list-item">
-                    <div style="margin-bottom:10px"><strong>${t.taskName}</strong></div>
-                    <div style="display:flex; gap:10px; align-items:center;">
-                        <select id="sel-${tid}" style="margin:0; flex:2;">
-                            <option value="Initial" ${t.status=='Initial'?'selected':''}>Initial</option>
-                            <option value="In-Process" ${t.status=='In-Process'?'selected':''}>In-Process</option>
-                            <option value="Completed" ${t.status=='Completed'?'selected':''}>Completed</option>
-                        </select>
-                        <button onclick="submitStatus('${tid}')" style="margin:0; flex:1; background: var(--success); font-size:12px;">UPDATE</button>
-                    </div>
-                </div>`;
+                rows += `<tr>
+                    <td data-label="Task Description"><b>${t.taskName}</b></td>
+                    <td data-label="Update Progress">
+                        <div style="display:flex; gap:5px;">
+                            <select id="sel-${tid}" style="margin:0; flex:2;">
+                                <option value="Initial" ${t.status=='Initial'?'selected':''}>Initial</option>
+                                <option value="In-Process" ${t.status=='In-Process'?'selected':''}>In-Process</option>
+                                <option value="Completed" ${t.status=='Completed'?'selected':''}>Completed</option>
+                            </select>
+                            <button onclick="submitStatus('${tid}')" style="margin:0; flex:1; background: var(--success); font-size:11px;">OK</button>
+                        </div>
+                    </td>
+                </tr>`;
             });
-            document.getElementById('emp-list-mobile').innerHTML = html || "<p>No tasks assigned to you yet.</p>";
+            document.getElementById('emp-list').innerHTML = rows || "<tr><td colspan='2'>No tasks yet.</td></tr>";
         });
     }
 
     function submitStatus(tid) {
         const s = document.getElementById('sel-' + tid).value;
-        db.ref('tasks/' + currentUser.code + '/' + tid).update({ status: s })
-        .then(() => alert("Status Updated!"));
+        db.ref('tasks/' + currentUser.code + '/' + tid).update({ status: s }).then(() => alert("Updated!"));
     }
 
-    function deleteTask(eid, tid) { if(confirm("Delete this task?")) db.ref(`tasks/${eid}/${tid}`).remove(); }
-    
-    function exportCSV() {
-        db.ref('tasks').once('value', taskSnap => {
-            let csv = "Code,Name,Task,Status,Date\n";
-            taskSnap.forEach(empTasks => {
-                const info = globalEmpData[empTasks.key] || { name: "N/A" };
-                empTasks.forEach(t => {
-                    const data = t.val();
-                    csv += `${empTasks.key},${info.name},${data.taskName},${data.status},${data.date}\n`;
-                });
-            });
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'Report.csv';
-            link.click();
-        });
-    }
+    function deleteTask(eid, tid) { if(confirm("Delete?")) db.ref(`tasks/${eid}/${tid}`).remove(); }
     function logout() { location.reload(); }
 </script>
 </body>
