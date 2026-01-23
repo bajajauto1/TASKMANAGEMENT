@@ -3,99 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task Management System Pro</title>
+    <title>Bajaj Task Management Pro</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        :root { --primary: #2c3e50; --secondary: #34495e; --accent: #3498db; --light: #ecf0f1; --success: #27ae60; --danger: #e74c3c; --warning: #f1c40f; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--light); margin: 0; padding: 10px; }
-        .container { max-width: 1200px; margin: auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
-        .hidden { display: none; }
-        h2 { color: var(--primary); border-bottom: 3px solid var(--accent); padding-bottom: 10px; font-size: 1.4rem; }
-        .card { background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ddd; }
-        input, select, button { padding: 12px; margin: 8px 0; width: 100%; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; box-sizing: border-box; }
-        button { background: var(--accent); color: white; border: none; cursor: pointer; font-weight: bold; }
-        button.delete { background: var(--danger); width: 100%; padding: 10px; font-size: 14px; margin-top: 5px; }
-        button.logout { background: var(--secondary); width: auto; float: right; padding: 8px 15px; margin-top: -50px; }
+        :root { 
+            --primary: #2c3e50; --secondary: #34495e; --accent: #3498db; 
+            --light: #f8f9fa; --success: #27ae60; --danger: #e74c3c; --warning: #f1c40f; 
+        }
         
-        /* TABLE STYLING */
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
-        th, td { border: 1px solid #eee; padding: 12px; text-align: left; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--light); margin: 0; padding: 10px; color: #333; }
+        .container { max-width: 1200px; margin: auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
+        .hidden { display: none !important; }
+        
+        h2 { color: var(--primary); border-bottom: 3px solid var(--accent); padding-bottom: 10px; margin-top: 0; }
+        .card { background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #eee; }
+        
+        input, select, button { padding: 12px; margin: 8px 0; width: 100%; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
+        button { background: var(--accent); color: white; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button:active { transform: scale(0.98); }
+        
+        .logout { background: var(--danger); width: auto; float: right; padding: 6px 12px; font-size: 13px; margin-bottom: 10px; }
+        
+        /* ANALYTICS BOXES */
+        .flex-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+        .stat-box { 
+            flex: 1; min-width: 100px; padding: 15px; border-radius: 10px; 
+            color: white; text-align: center; cursor: pointer; 
+            transition: transform 0.2s; 
+        }
+        .stat-box b { font-size: 24px; display: block; }
+
+        /* MOBILE RESPONSIVE TABLE */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
         th { background: var(--primary); color: white; }
 
-        /* MOBILE RESPONSIVE TABLE (THE FIX) */
         @media screen and (max-width: 768px) {
             table, thead, tbody, th, td, tr { display: block; }
             thead tr { position: absolute; top: -9999px; left: -9999px; }
-            tr { border: 1px solid #ccc; margin-bottom: 15px; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-            td { border: none; border-bottom: 1px solid #eee; position: relative; padding-left: 50% !important; text-align: right; }
+            tr { border: 1px solid #ddd; margin-bottom: 15px; border-radius: 10px; background: #fff; padding: 5px; }
+            td { border: none; border-bottom: 1px solid #eee; position: relative; padding-left: 45% !important; text-align: right; }
             td:before { 
-                position: absolute; left: 10px; width: 45%; padding-right: 10px; 
-                white-space: nowrap; font-weight: bold; text-align: left;
-                content: attr(data-label); color: var(--secondary);
+                position: absolute; left: 10px; width: 40%; font-weight: bold; 
+                text-align: left; content: attr(data-label); color: var(--secondary);
             }
-            button.logout { float: none; width: 100%; margin-top: 10px; }
-            .flex-row { flex-direction: column; }
         }
 
-        .status-tag { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .status-tag { padding: 4px 8px; border-radius: 5px; font-size: 11px; font-weight: bold; }
         .Initial { background: #bdc3c7; color: #333; }
         .In-Process { background: var(--warning); color: #333; }
         .Completed { background: var(--success); color: white; }
-        .flex-row { display: flex; gap: 15px; flex-wrap: wrap; }
-        .stat-box { flex: 1; padding: 15px; border-radius: 8px; color: white; text-align: center; min-width: 100px; }
+        
+        .btn-call { background: #2ecc71; color: white; padding: 5px 10px; border-radius: 5px; text-decoration: none; font-size: 12px; display: inline-block; }
+        .btn-del { background: var(--danger); width: auto; padding: 5px 10px; font-size: 11px; margin-left: 5px;}
     </style>
 </head>
 <body>
 
 <div class="container">
     <div id="login-section">
-        <h2 style="text-align:center">BAJAJ TASK SYSTEM</h2>
+        <h2 style="text-align:center; border:none;">BAJAJ TASK SYSTEM</h2>
         <div class="card" style="max-width: 400px; margin: auto; border-top: 5px solid var(--accent);">
-            <input type="text" id="login-id" placeholder="Enter ADMIN, ASO-1, ASO-2 or Emp Code">
+            <input type="text" id="login-id" placeholder="Admin or Employee Code">
             <button onclick="handleLogin()">Access Dashboard</button>
         </div>
     </div>
 
     <div id="admin-dashboard" class="hidden">
         <button class="logout" onclick="logout()">Logout</button>
-        <h2 id="admin-title">Admin Management</h2>
+        <h2>Admin Management</h2>
         
-        <div class="card" style="border-left: 5px solid var(--success);">
-            <h3>📊 Real-time Report</h3>
-            <div class="flex-row">
-                <div class="stat-box" style="background: #7f8c8d;"><small>INITIAL</small><br><span id="stat-initial" style="font-size: 24px;">0</span></div>
-                <div class="stat-box" style="background: var(--warning); color: #333;"><small>IN-PROGRESS</small><br><span id="stat-progress" style="font-size: 24px;">0</span></div>
-                <div class="stat-box" style="background: var(--success);"><small>COMPLETED</small><br><span id="stat-completed" style="font-size: 24px;">0</span></div>
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="margin:0">📊 Analytical Filter</h3>
+                <button onclick="setFilter('All')" style="width: auto; padding: 5px 12px; background: var(--secondary); font-size: 12px;">Reset View</button>
             </div>
-            <p id="completion-text" style="text-align: center; font-weight: bold; font-size: 13px; margin-top:10px;">0% Completion Rate</p>
+            <div class="flex-row">
+                <div class="stat-box" onclick="setFilter('Initial')" style="background: #7f8c8d;">
+                    <small>Initial</small><b id="stat-initial">0</b>
+                </div>
+                <div class="stat-box" onclick="setFilter('In-Process')" style="background: var(--warning); color: #333;">
+                    <small>In-Process</small><b id="stat-progress">0</b>
+                </div>
+                <div class="stat-box" onclick="setFilter('Completed')" style="background: var(--success);">
+                    <small>Completed</small><b id="stat-completed">0</b>
+                </div>
+            </div>
         </div>
 
         <div class="flex-row">
             <div class="card" style="flex: 1; border-top: 4px solid var(--primary);">
-                <h3>Manage Employees</h3>
-                <input type="text" id="emp-name" placeholder="Full Name">
-                <input type="text" id="emp-code" placeholder="Login Code">
-                <input type="text" id="emp-designation" placeholder="Designation">
-                <button onclick="saveEmployee()">Register/Update</button>
+                <h3>Staff Registration</h3>
+                <input type="text" id="reg-name" placeholder="Full Name">
+                <input type="text" id="reg-code" placeholder="Employee Code">
+                <input type="text" id="reg-desig" placeholder="Designation (e.g. Sales)">
+                <input type="tel" id="reg-phone" placeholder="Phone Number">
+                <button onclick="saveEmployee()">Register Staff</button>
             </div>
             <div class="card" style="flex: 1; border-top: 4px solid var(--accent);">
                 <h3>Assign New Task</h3>
-                <select id="task-assignee"></select>
-                <input type="text" id="task-name" placeholder="Describe Task">
-                <button onclick="assignTask()" style="background: var(--success);">Assign Task</button>
+                <select id="task-assignee"><option>Loading...</option></select>
+                <input type="text" id="task-name" placeholder="Task Details">
+                <button onclick="assignTask()" style="background: var(--success);">Assign Now</button>
             </div>
         </div>
-        
-        <button onclick="exportCSV()" style="background: #27ae60; margin: 10px 0;">📊 Download CSV Report</button>
 
-        <h3>Live Monitoring Table</h3>
+        <button onclick="exportCSV()" style="background: #27ae60; margin-bottom: 20px;">📥 Download Detailed CSV</button>
+
+        <h3>Monitoring Table</h3>
         <table id="admin-table">
             <thead>
                 <tr>
-                    <th>Emp Code</th>
-                    <th>Name</th>
-                    <th>Task Name</th>
+                    <th>Staff Info</th>
+                    <th>Designation</th>
+                    <th>Task Details</th>
                     <th>Status</th>
                     <th>Action</th>
                 </tr>
@@ -106,19 +128,12 @@
 
     <div id="employee-dashboard" class="hidden">
         <button class="logout" onclick="logout()">Logout</button>
-        <h2>Welcome, <span id="display-emp-name"></span></h2>
-        <div class="card">
-            <h3>My Tasks</h3>
-            <table id="emp-table">
-                <thead><tr><th>Task</th><th>Action</th></tr></thead>
-                <tbody id="emp-list"></tbody>
-            </table>
-        </div>
+        <h2>Hi, <span id="display-emp-name"></span></h2>
+        <div id="emp-task-cards"></div>
     </div>
 </div>
 
 <script>
-    // Config stays the same
     const firebaseConfig = {
         apiKey: "AIzaSyAmQil4nkkdp98pAYCILemHxRTYCAy5nEw",
         authDomain: "taskmanager-45c3a.firebaseapp.com",
@@ -131,8 +146,10 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    
     let currentUser = null;
     let globalEmpData = {};
+    let currentFilter = 'All';
 
     function handleLogin() {
         const id = document.getElementById('login-id').value.trim();
@@ -141,8 +158,10 @@
             showDashboard('admin');
         } else {
             db.ref('employees/' + id).once('value', snap => {
-                if(snap.exists()) { currentUser = snap.val(); showDashboard('employee'); }
-                else { alert("Login failed."); }
+                if(snap.exists()) { 
+                    currentUser = snap.val(); 
+                    showDashboard('employee'); 
+                } else { alert("User Code not found!"); }
             });
         }
     }
@@ -159,24 +178,30 @@
         }
     }
 
+    function setFilter(status) {
+        currentFilter = status;
+        loadAdminData();
+    }
+
     function saveEmployee() {
-        const name = document.getElementById('emp-name').value;
-        const code = document.getElementById('emp-code').value;
-        const designation = document.getElementById('emp-designation').value;
-        if(name && code) {
-            db.ref('employees/' + code).set({ name, code, designation });
-            alert("Saved!");
-            document.getElementById('emp-name').value = ''; document.getElementById('emp-code').value = '';
+        const n = document.getElementById('reg-name').value;
+        const c = document.getElementById('reg-code').value;
+        const d = document.getElementById('reg-desig').value;
+        const p = document.getElementById('reg-phone').value;
+        if(n && c) {
+            db.ref('employees/' + c).set({ name: n, code: c, designation: d, phone: p });
+            alert("Staff Registered!");
+            document.querySelectorAll('#admin-dashboard input').forEach(i => i.value = "");
         }
     }
 
     function assignTask() {
-        const code = document.getElementById('task-assignee').value;
-        const task = document.getElementById('task-name').value;
-        if(task) {
-            db.ref('tasks/' + code).push({ taskName: task, status: 'Initial', date: new Date().toLocaleDateString() });
-            document.getElementById('task-name').value = "";
+        const c = document.getElementById('task-assignee').value;
+        const t = document.getElementById('task-name').value;
+        if(t) {
+            db.ref('tasks/' + c).push({ taskName: t, status: 'Initial', date: new Date().toLocaleDateString() });
             alert("Task Assigned!");
+            document.getElementById('task-name').value = "";
         }
     }
 
@@ -189,63 +214,80 @@
         });
 
         db.ref('tasks').on('value', snap => {
-            let rows = ""; let i = 0, p = 0, c = 0, total = 0;
-            snap.forEach(empTasks => {
-                const details = globalEmpData[empTasks.key] || { name: "N/A" };
-                empTasks.forEach(tSnap => {
-                    const t = tSnap.val(); total++;
-                    if(t.status==='Initial') i++; else if(t.status==='In-Process') p++; else c++;
-                    // Added data-label for mobile view
-                    rows += `<tr>
-                        <td data-label="Emp Code"><b>${empTasks.key}</b></td>
-                        <td data-label="Name">${details.name}</td>
-                        <td data-label="Task Name">${t.taskName}</td>
-                        <td data-label="Status"><span class="status-tag ${t.status}">${t.status}</span></td>
-                        <td data-label="Action"><button class="delete" onclick="deleteTask('${empTasks.key}','${tSnap.key}')">Delete</button></td>
-                    </tr>`;
+            let rows = ""; 
+            let counts = { Initial: 0, 'In-Process': 0, Completed: 0 };
+            
+            snap.forEach(empGroup => {
+                const staff = globalEmpData[empGroup.key] || { name: "N/A", designation: "N/A", phone: "" };
+                empGroup.forEach(tSnap => {
+                    const t = tSnap.val();
+                    counts[t.status]++;
+
+                    if(currentFilter === 'All' || t.status === currentFilter) {
+                        rows += `<tr>
+                            <td data-label="Staff Info"><b>${staff.name}</b><br><small>${empGroup.key}</small></td>
+                            <td data-label="Designation">${staff.designation || 'N/A'}</td>
+                            <td data-label="Task">${t.taskName}</td>
+                            <td data-label="Status"><span class="status-tag ${t.status}">${t.status}</span></td>
+                            <td data-label="Action">
+                                ${staff.phone ? `<a href="tel:${staff.phone}" class="btn-call">📞 Call</a>` : ''}
+                                <button class="btn-del" onclick="deleteTask('${empGroup.key}','${tSnap.key}')">Del</button>
+                            </td>
+                        </tr>`;
+                    }
                 });
             });
-            document.getElementById('admin-list').innerHTML = rows;
-            updateStats(i, p, c, total);
+            document.getElementById('admin-list').innerHTML = rows || "<tr><td colspan='5' style='text-align:center'>No tasks found.</td></tr>";
+            document.getElementById('stat-initial').innerText = counts.Initial;
+            document.getElementById('stat-progress').innerText = counts['In-Process'];
+            document.getElementById('stat-completed').innerText = counts.Completed;
         });
-    }
-
-    function updateStats(i, p, c, total) {
-        document.getElementById('stat-initial').innerText = i;
-        document.getElementById('stat-progress').innerText = p;
-        document.getElementById('stat-completed').innerText = c;
-        if(total > 0) document.getElementById('completion-text').innerText = Math.round(c/total*100) + "% Team Completion Rate";
     }
 
     function loadEmployeeTasks() {
         db.ref('tasks/' + currentUser.code).on('value', snap => {
-            let rows = "";
+            let html = "";
             snap.forEach(tSnap => {
-                const t = tSnap.val(); const tid = tSnap.key;
-                rows += `<tr>
-                    <td data-label="Task Description"><b>${t.taskName}</b></td>
-                    <td data-label="Update Progress">
-                        <div style="display:flex; gap:5px;">
-                            <select id="sel-${tid}" style="margin:0; flex:2;">
-                                <option value="Initial" ${t.status=='Initial'?'selected':''}>Initial</option>
-                                <option value="In-Process" ${t.status=='In-Process'?'selected':''}>In-Process</option>
-                                <option value="Completed" ${t.status=='Completed'?'selected':''}>Completed</option>
-                            </select>
-                            <button onclick="submitStatus('${tid}')" style="margin:0; flex:1; background: var(--success); font-size:11px;">OK</button>
-                        </div>
-                    </td>
-                </tr>`;
+                const t = tSnap.val();
+                html += `<div class="card" style="border-left:5px solid var(--accent)">
+                    <p><b>Task:</b> ${t.taskName}</p>
+                    <select id="sel-${tSnap.key}">
+                        <option value="Initial" ${t.status=='Initial'?'selected':''}>Initial</option>
+                        <option value="In-Process" ${t.status=='In-Process'?'selected':''}>In-Process</option>
+                        <option value="Completed" ${t.status=='Completed'?'selected':''}>Completed</option>
+                    </select>
+                    <button onclick="updateStatus('${tSnap.key}')" style="background:var(--success)">Update Status</button>
+                </div>`;
             });
-            document.getElementById('emp-list').innerHTML = rows || "<tr><td colspan='2'>No tasks yet.</td></tr>";
+            document.getElementById('emp-task-cards').innerHTML = html || "No tasks assigned.";
         });
     }
 
-    function submitStatus(tid) {
-        const s = document.getElementById('sel-' + tid).value;
-        db.ref('tasks/' + currentUser.code + '/' + tid).update({ status: s }).then(() => alert("Updated!"));
+    function updateStatus(tid) {
+        const val = document.getElementById('sel-'+tid).value;
+        db.ref('tasks/' + currentUser.code + '/' + tid).update({ status: val }).then(() => alert("Updated!"));
     }
 
-    function deleteTask(eid, tid) { if(confirm("Delete?")) db.ref(`tasks/${eid}/${tid}`).remove(); }
+    function deleteTask(eid, tid) { if(confirm("Delete task?")) db.ref(`tasks/${eid}/${tid}`).remove(); }
+    
+    function exportCSV() {
+        db.ref('tasks').once('value', snap => {
+            let csv = "Staff Name,Emp Code,Designation,Phone,Task,Status,Date\n";
+            snap.forEach(eg => {
+                const staff = globalEmpData[eg.key] || { name: "N/A", designation: "N/A", phone: "N/A" };
+                eg.forEach(t => { 
+                    const d = t.val();
+                    csv += `"${staff.name}","${eg.key}","${staff.designation}","${staff.phone}","${d.taskName}","${d.status}","${d.date}"\n`;
+                });
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'Detailed_Task_Report.csv';
+            link.click();
+        });
+    }
+
     function logout() { location.reload(); }
 </script>
 </body>
