@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Task Checker System</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        :root { --primary: #2c3e50; --secondary: #34495e; --accent: #3498db; --light: #ecf0f1; --success: #2ecc71; --danger: #e74c3c; --warning: #f1c40f; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--light); margin: 0; padding: 10px; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .hidden { display: none; }
+        h2 { color: var(--primary); border-bottom: 3px solid var(--accent); padding-bottom: 10px; margin-top: 0; }
+        .card { background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        input, select, button { padding: 12px; margin: 8px 0; width: 100%; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; box-sizing: border-box; }
+        button { background: var(--accent); color: white; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        button.delete { background: var(--danger); width: auto; padding: 5px 12px; font-size: 0.8em; }
+        button.logout { background: var(--secondary); width: auto; float: right; padding: 8px 15px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #eee; padding: 12px; text-align: left; }
+        th { background: var(--primary); color: white; }
+        .status-tag { padding: 5px 12px; border-radius: 20px; font-size: 0.8em; font-weight: bold; }
+        .Initial { background: #bdc3c7; color: #333; }
+        .In-Process { background: var(--warning); color: #333; }
+        .Completed { background: var(--success); color: white; }
+        .flex-row { display: flex; gap: 15px; flex-wrap: wrap; }
+        .stat-box { flex: 1; padding: 15px; border-radius: 8px; color: white; min-width: 120px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="login-section">
+        <h2 style="text-align:center">Task Checker System</h2>
+        <div class="card" style="max-width: 400px; margin: auto; border-top: 5px solid var(--accent);">
+            <label>Access Code:</label>
+            <input type="text" id="login-id" placeholder="ADMIN, ASO-1, or Emp Code">
+            <button onclick="handleLogin()">Login</button>
+        </div>
+    </div>
+
+    <div id="admin-dashboard" class="hidden">
+        <button class="logout" onclick="logout()">Logout</button>
+        <h2 id="admin-title">Management Dashboard</h2>
+        
+        <div class="card" style="border-left: 5px solid var(--success);">
+            <h3 style="margin-top:0">📊 Real-time Analytical Report</h3>
+            <div class="flex-row">
+                <div class="stat-box" style="background: #7f8c8d;">
+                    <small>INITIAL</small><br>
+                    <span id="stat-initial" style="font-size: 28px; font-weight: bold;">0</span>
+                </div>
+                <div class="stat-box" style="background: var(--warning); color: #333;">
+                    <small>IN-PROGRESS</small><br>
+                    <span id="stat-progress" style="font-size: 28px; font-weight: bold;">0</span>
+                </div>
+                <div class="stat-box" style="background: var(--success);">
+                    <small>COMPLETED</small><br>
+                    <span id="stat-completed" style="font-size: 28px; font-weight: bold;">0</span>
+                </div>
+            </div>
+            <div style="width: 100%; background: #eee; border-radius: 10px; margin-top: 20px; height: 15px; overflow: hidden; display: flex;">
+                <div id="bar-initial" style="height: 100%; background: #bdc3c7; width: 0%; transition: 0.8s;"></div>
+                <div id="bar-progress" style="height: 100%; background: var(--warning); width: 0%; transition: 0.8s;"></div>
+                <div id="bar-completed" style="height: 100%; background: var(--success); width: 0%; transition: 0.8s;"></div>
+            </div>
+            <p id="completion-text" style="text-align: center; font-weight: bold; margin-bottom: 0;">0% Total Completion</p>
+        </div>
+
+        <div class="flex-row">
+            <div class="card" style="flex: 1; border-top: 4px solid var(--primary);">
+                <h3>Register Employee</h3>
+                <input type="text" id="emp-name" placeholder="Name">
+                <input type="text" id="emp-code" placeholder="Unique Code">
+                <input type="text" id="emp-designation" placeholder="Designation">
+                <button onclick="saveEmployee()">Register/Update</button>
+            </div>
+
+            <div class="card" style="flex: 1; border-top: 4px solid var(--accent);">
+                <h3>Assign Task</h3>
+                <select id="task-assignee"></select>
+                <input type="text" id="task-name" placeholder="Task Detail">
+                <button onclick="assignTask()" style="background: var(--success);">Assign Now</button>
+            </div>
+        </div>
+        
+        <button onclick="exportCSV()" style="background: #27ae60; margin: 10px 0;">📥 Export Daily Report (CSV)</button>
+
+        <h3>Employee Live Status</h3>
+        <table id="admin-table">
+            <thead>
+                <tr><th>Code</th><th>Task</th><th>Status</th><th>Action</th></tr>
+            </thead>
+            <tbody id="admin-list"></tbody>
+        </table>
+    </div>
+
+    <div id="employee-dashboard" class="hidden">
+        <button class="logout" onclick="logout()">Logout</button>
+        <h2>Employee: <span id="display-emp-name"></span></h2>
+        <div class="card">
+            <h3>My Tasks</h3>
+            <table id="emp-table">
+                <thead><tr><th>Task</th><th>Action</th></tr></thead>
+                <tbody id="emp-list"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Firebase Config (Your credentials)
+    const firebaseConfig = {
+        apiKey: "AIzaSyAmQil4nkkdp98pAYCILemHxRTYCAy5nEw",
+        authDomain: "taskmanager-45c3a.firebaseapp.com",
+        databaseURL: "https://taskmanager-45c3a-default-rtdb.firebaseio.com",
+        projectId: "taskmanager-45c3a",
+        storageBucket: "taskmanager-45c3a.firebasestorage.app",
+        messagingSenderId: "710242454866",
+        appId: "1:710242454866:web:a87f396d484014f7c67e8b"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let currentUser = null;
+
+    function handleLogin() {
+        const id = document.getElementById('login-id').value.trim();
+        if (!id) return;
+        if(id === 'ADMIN' || id === 'ASO-1' || id === 'ASO-2') {
+            currentUser = { role: 'admin', id: id };
+            showDashboard('admin');
+        } else {
+            db.ref('employees/' + id).once('value', snap => {
+                if(snap.exists()) { currentUser = snap.val(); showDashboard('employee'); }
+                else { alert("Invalid Code"); }
+            });
+        }
+    }
+
+    function showDashboard(type) {
+        document.getElementById('login-section').classList.add('hidden');
+        if(type === 'admin') {
+            document.getElementById('admin-dashboard').classList.remove('hidden');
+            document.getElementById('admin-title').innerText = "Portal: " + currentUser.id;
+            loadAdminData();
+        } else {
+            document.getElementById('employee-dashboard').classList.remove('hidden');
+            document.getElementById('display-emp-name').innerText = currentUser.name;
+            loadEmployeeTasks();
+        }
+    }
+
+    function saveEmployee() {
+        const name = document.getElementById('emp-name').value;
+        const code = document.getElementById('emp-code').value;
+        const desig = document.getElementById('emp-designation').value;
+        if(name && code) {
+            db.ref('employees/' + code).set({ name, code, designation: desig });
+            alert("Success");
+        }
+    }
+
+    function assignTask() {
+        const code = document.getElementById('task-assignee').value;
+        const task = document.getElementById('task-name').value;
+        if(task) {
+            db.ref('tasks/' + code).push({ taskName: task, status: 'Initial', date: new Date().toLocaleDateString() });
+            document.getElementById('task-name').value = "";
+        }
+    }
+
+    function loadAdminData() {
+        db.ref('employees').on('value', snap => {
+            let options = "";
+            snap.forEach(e => { options += `<option value="${e.key}">${e.val().name}</option>`; });
+            document.getElementById('task-assignee').innerHTML = options;
+        });
+
+        db.ref('tasks').on('value', snap => {
+            let rows = "";
+            let i = 0, p = 0, c = 0, total = 0;
+            snap.forEach(empTasks => {
+                empTasks.forEach(tSnap => {
+                    const t = tSnap.val();
+                    total++;
+                    if(t.status==='Initial') i++; else if(t.status==='In-Process') p++; else c++;
+                    rows += `<tr><td>${empTasks.key}</td><td>${t.taskName}</td><td><span class="status-tag ${t.status}">${t.status}</span></td><td><button class="delete" onclick="deleteTask('${empTasks.key}','${tSnap.key}')">Del</button></td></tr>`;
+                });
+            });
+            document.getElementById('admin-list').innerHTML = rows;
+            updateStats(i, p, c, total);
+        });
+    }
+
+    function updateStats(i, p, c, total) {
+        document.getElementById('stat-initial').innerText = i;
+        document.getElementById('stat-progress').innerText = p;
+        document.getElementById('stat-completed').innerText = c;
+        if(total > 0) {
+            document.getElementById('bar-initial').style.width = (i/total*100) + "%";
+            document.getElementById('bar-progress').style.width = (p/total*100) + "%";
+            document.getElementById('bar-completed').style.width = (c/total*100) + "%";
+            document.getElementById('completion-text').innerText = Math.round(c/total*100) + "% Completion Rate (" + total + " tasks)";
+        }
+    }
+
+    // UPDATED EMPLOYEE TASK LIST WITH SUBMIT BUTTON
+function loadEmployeeTasks() {
+    db.ref('tasks/' + currentUser.code).on('value', snap => {
+        let rows = "";
+        snap.forEach(tSnap => {
+            const t = tSnap.val();
+            const tid = tSnap.key; // Task ID
+            rows += `
+            <tr>
+                <td style="font-weight: bold;">${t.taskName}</td>
+                <td>
+                    <div style="display: flex; gap: 5px;">
+                        <select id="sel-${tid}" style="margin:0; flex: 2;">
+                            <option value="Initial" ${t.status=='Initial'?'selected':''}>Initial</option>
+                            <option value="In-Process" ${t.status=='In-Process'?'selected':''}>In-Process</option>
+                            <option value="Completed" ${t.status=='Completed'?'selected':''}>Completed</option>
+                        </select>
+                        <button onclick="submitStatus('${tid}')" style="margin:0; flex: 1; background: #27ae60; padding: 5px; font-size: 12px;">
+                            SUBMIT
+                        </button>
+                    </div>
+                </td>
+            </tr>`;
+        });
+        document.getElementById('emp-list').innerHTML = rows || "<tr><td colspan='2'>No tasks yet</td></tr>";
+    });
+}
+
+// NEW FUNCTION TO HANDLE THE SUBMIT BUTTON CLICK
+function submitStatus(taskId) {
+    const selectedStatus = document.getElementById('sel-' + taskId).value;
+    db.ref('tasks/' + currentUser.code + '/' + taskId).update({ 
+        status: selectedStatus 
+    }).then(() => {
+        alert("Status Submitted Successfully!");
+    });
+}
+
+    function updateStatus(tid, status) { db.ref('tasks/' + currentUser.code + '/' + tid).update({ status }); }
+    function deleteTask(eid, tid) { if(confirm("Delete?")) db.ref(`tasks/${eid}/${tid}`).remove(); }
+    
+    function exportCSV() {
+        db.ref('tasks').once('value', snap => {
+            let csv = "Emp,Task,Status,Date\n";
+            snap.forEach(e => e.forEach(t => { const d = t.val(); csv += `${e.key},${d.taskName},${d.status},${d.date}\n`; }));
+            const link = document.createElement('a');
+            link.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
+            link.download = 'Report.csv';
+            link.click();
+        });
+    }
+    function logout() { location.reload(); }
+</script>
+</body>
+</html>
