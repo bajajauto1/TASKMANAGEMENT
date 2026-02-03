@@ -6,42 +6,137 @@
     <title>Bajaj Task Management Pro</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
     <style>
         :root { 
             --primary: #2c3e50; --secondary: #34495e; --accent: #3498db; 
             --light: #f8f9fa; --success: #27ae60; --danger: #e74c3c; --warning: #f1c40f; 
         }
         
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--light); margin: 0; padding: 10px; color: #333; }
-        .container { max-width: 1200px; margin: auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            background: var(--light); 
+            margin: 0; 
+            padding: 10px; 
+            color: #333; 
+        }
+
+        .container { 
+            max-width: 1200px; 
+            margin: auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 12px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08); 
+        }
+
         .hidden { display: none !important; }
         
         h2 { color: var(--primary); border-bottom: 3px solid var(--accent); padding-bottom: 10px; margin-top: 0; }
-        .card { background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #eee; }
+        h3 { font-size: 1.1rem; margin-bottom: 10px; color: var(--secondary); }
+
+        .card { 
+            background: #fff; 
+            padding: 15px; 
+            border-radius: 10px; 
+            margin-bottom: 20px; 
+            border: 1px solid #eee; 
+            box-sizing: border-box;
+        }
         
-        input, select, button { padding: 12px; margin: 8px 0; width: 100%; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
-        button { background: var(--accent); color: white; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        input, select, button { 
+            padding: 12px; 
+            margin: 8px 0; 
+            width: 100%; 
+            border: 1px solid #ccc; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            box-sizing: border-box; 
+        }
+
+        button { 
+            background: var(--accent); 
+            color: white; 
+            border: none; 
+            cursor: pointer; 
+            font-weight: bold; 
+            transition: 0.2s; 
+        }
+
+        button:hover { opacity: 0.9; }
         button:active { transform: scale(0.98); }
         
-        .logout { background: var(--danger); width: auto; float: right; padding: 6px 12px; font-size: 13px; margin-bottom: 10px; }
+        .logout { 
+            background: var(--danger); 
+            width: auto; 
+            float: right; 
+            padding: 8px 16px; 
+            font-size: 13px; 
+            margin-bottom: 15px; 
+        }
+
+        /* Flexbox Grid for Dashboard */
+        .flex-row { 
+            display: flex; 
+            gap: 15px; 
+            flex-wrap: wrap; 
+            margin-bottom: 15px; 
+        }
+
+        .stat-box { 
+            flex: 1; 
+            min-width: 120px; 
+            padding: 15px; 
+            border-radius: 10px; 
+            color: white; 
+            text-align: center; 
+            cursor: pointer; 
+            transition: transform 0.2s; 
+        }
         
-        .flex-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
-        .stat-box { flex: 1; min-width: 100px; padding: 15px; border-radius: 10px; color: white; text-align: center; cursor: pointer; transition: transform 0.2s; }
+        .stat-box:hover { transform: translateY(-3px); }
         .stat-box b { font-size: 24px; display: block; }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        /* Responsive Table Wrapper */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            font-size: 14px; 
+            min-width: 700px; /* Ensures table doesn't look squashed on mobile */
+        }
+
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
         th { background: var(--primary); color: white; }
 
-        .status-tag { padding: 4px 8px; border-radius: 5px; font-size: 11px; font-weight: bold; }
+        .status-tag { padding: 4px 8px; border-radius: 5px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
         .Initial { background: #bdc3c7; color: #333; }
         .In-Process { background: var(--warning); color: #333; }
         .Completed { background: var(--success); color: white; }
         
-        .group-badge { background: #9b59b6; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; display: inline-block; margin-bottom: 4px;}
-        .leader-badge { background: #e67e22; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; display: inline-block; margin-bottom: 4px;}
+        .group-badge { background: #9b59b6; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; display: inline-block; }
+        .leader-badge { background: #e67e22; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; display: inline-block; }
+        
         select[multiple] { height: 100px; }
         .btn-del { background: var(--danger); width: auto; padding: 5px 10px; font-size: 11px; margin-left: 5px;}
+
+        /* Tablet/Mobile Adjustments */
+        @media (max-width: 768px) {
+            .flex-row > .card {
+                flex: 1 1 100%; /* Stack cards vertically on mobile */
+            }
+            .stat-box {
+                flex: 1 1 45%; /* Show stats 2x2 on smaller screens */
+            }
+            .logout { float: none; width: 100%; margin-bottom: 20px; }
+        }
     </style>
 </head>
 <body>
@@ -57,6 +152,7 @@
 
     <div id="admin-dashboard" class="hidden">
         <button class="logout" onclick="logout()">Logout</button>
+        <div style="clear: both;"></div>
         <h2>Admin Management</h2>
         
         <div class="card">
@@ -64,11 +160,12 @@
                 <div class="stat-box" onclick="setFilter('Initial')" style="background: #7f8c8d;"><small>Initial</small><b id="stat-initial">0</b></div>
                 <div class="stat-box" onclick="setFilter('In-Process')" style="background: var(--warning); color: #333;"><small>In-Process</small><b id="stat-progress">0</b></div>
                 <div class="stat-box" onclick="setFilter('Completed')" style="background: var(--success);"><small>Completed</small><b id="stat-completed">0</b></div>
+                <div class="stat-box" onclick="setFilter('All')" style="background: var(--primary);"><small>Show All</small><b>∞</b></div>
             </div>
         </div>
 
         <div class="flex-row">
-            <div class="card" style="flex: 1; min-width: 250px; border-top: 4px solid var(--primary);">
+            <div class="card" style="flex: 1; border-top: 4px solid var(--primary);">
                 <h3>Staff Registration</h3>
                 <input type="text" id="reg-name" placeholder="Full Name">
                 <input type="text" id="reg-code" placeholder="Employee Code">
@@ -77,7 +174,7 @@
                 <button onclick="saveEmployee()">Register Staff</button>
             </div>
 
-            <div class="card" style="flex: 1; min-width: 250px; border-top: 4px solid #9b59b6;">
+            <div class="card" style="flex: 1; border-top: 4px solid #9b59b6;">
                 <h3>Make Group & Assign</h3>
                 <input type="text" id="group-name-input" placeholder="Enter Group Name">
                 <p style="font-size:11px; color:#666; margin:0;">Select Group Leader:</p>
@@ -88,7 +185,7 @@
                 <button onclick="assignGroupTask()" style="background: #9b59b6;">Assign to Group</button>
             </div>
 
-            <div class="card" style="flex: 1; min-width: 250px; border-top: 4px solid var(--accent);">
+            <div class="card" style="flex: 1; border-top: 4px solid var(--accent);">
                 <h3>Assign Single Task</h3>
                 <select id="task-assignee"></select>
                 <input type="text" id="task-name" placeholder="Task Details">
@@ -97,28 +194,32 @@
         </div>
 
         <h3>Monitoring Table</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Staff/Group</th>
-                    <th>Designation</th>
-                    <th>Task Details</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="admin-list"></tbody>
-        </table>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Staff/Group</th>
+                        <th>Designation</th>
+                        <th>Task Details</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-list"></tbody>
+            </table>
+        </div>
     </div>
 
     <div id="employee-dashboard" class="hidden">
         <button class="logout" onclick="logout()">Logout</button>
+        <div style="clear: both;"></div>
         <h2>Hi, <span id="display-emp-name"></span></h2>
         <div id="emp-task-cards"></div>
     </div>
 </div>
 
 <script>
+    // Firebase Configuration
     const firebaseConfig = {
         apiKey: "AIzaSyAmQil4nkkdp98pAYCILemHxRTYCAy5nEw",
         authDomain: "taskmanager-45c3a.firebaseapp.com",
@@ -136,6 +237,7 @@
     let globalEmpData = {};
     let currentFilter = 'All';
 
+    // LOGIN LOGIC
     function handleLogin() {
         const id = document.getElementById('login-id').value.trim();
         if(['ADMIN00001', 'ASO-1', 'ASO-2'].includes(id)) {
@@ -163,6 +265,7 @@
         }
     }
 
+    // ADMIN ACTIONS
     function saveEmployee() {
         const n = document.getElementById('reg-name').value;
         const c = document.getElementById('reg-code').value;
@@ -171,6 +274,7 @@
         if(n && c) {
             db.ref('employees/' + c).set({ name: n, code: c, designation: d, phone: p });
             alert("Staff Registered!");
+            document.querySelectorAll('#reg-name, #reg-code, #reg-desig, #reg-phone').forEach(i => i.value = "");
         }
     }
 
@@ -180,6 +284,7 @@
         if(t) {
             db.ref('tasks/' + c).push({ taskName: t, status: 'Initial', date: new Date().toLocaleDateString() });
             alert("Single Task Assigned!");
+            document.getElementById('task-name').value = "";
         }
     }
 
@@ -223,6 +328,7 @@
             const tasks = snap.child('tasks').val() || {};
             const groupTasks = snap.child('group_tasks').val() || {};
 
+            // Process Individual Tasks
             Object.keys(tasks).forEach(empCode => {
                 const staff = globalEmpData[empCode] || { name: empCode, designation: "N/A" };
                 Object.keys(tasks[empCode]).forEach(tKey => {
@@ -240,6 +346,7 @@
                 });
             });
 
+            // Process Group Tasks
             Object.keys(groupTasks).forEach(gKey => {
                 const gt = groupTasks[gKey];
                 counts[gt.status]++;
@@ -263,6 +370,7 @@
         });
     }
 
+    // EMPLOYEE ACTIONS
     function loadEmployeeTasks() {
         const empCode = currentUser.code;
         db.ref().on('value', snap => {
@@ -280,13 +388,13 @@
                     html += createTaskCard(`${gName}: ${groupTasks[gid].taskName}`, groupTasks[gid].status, gid, 'group');
                 }
             });
-            document.getElementById('emp-task-cards').innerHTML = html || "No tasks.";
+            document.getElementById('emp-task-cards').innerHTML = html || "<p style='text-align:center; padding:20px;'>No pending tasks.</p>";
         });
     }
 
     function createTaskCard(name, status, id, type) {
         return `<div class="card" style="border-left:5px solid ${type === 'group' ? '#9b59b6' : '#3498db'}">
-            ${type === 'group' ? '<span class="group-badge">GROUP TASK</span>' : ''}
+            ${type === 'group' ? '<span class="group-badge" style="margin-bottom:10px;">GROUP TASK</span>' : ''}
             <p><b>${name}</b></p>
             <select id="sel-${id}">
                 <option value="Initial" ${status=='Initial'?'selected':''}>Initial</option>
@@ -304,7 +412,7 @@
     }
 
     function deleteTask(empCode, tKey, type) {
-        if(!confirm("Delete?")) return;
+        if(!confirm("Are you sure you want to delete this task?")) return;
         const path = type === 'single' ? `tasks/${empCode}/${tKey}` : `group_tasks/${tKey}`;
         db.ref(path).remove();
     }
