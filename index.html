@@ -25,37 +25,22 @@
         
         .logout { background: var(--danger); width: auto; float: right; padding: 6px 12px; font-size: 13px; margin-bottom: 10px; }
         
-        /* ANALYTICS BOXES */
         .flex-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
-        .stat-box { 
-            flex: 1; min-width: 100px; padding: 15px; border-radius: 10px; 
-            color: white; text-align: center; cursor: pointer; 
-            transition: transform 0.2s; 
-        }
+        .stat-box { flex: 1; min-width: 100px; padding: 15px; border-radius: 10px; color: white; text-align: center; cursor: pointer; transition: transform 0.2s; }
         .stat-box b { font-size: 24px; display: block; }
 
-        /* MOBILE RESPONSIVE TABLE */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
         th { background: var(--primary); color: white; }
-
-        @media screen and (max-width: 768px) {
-            table, thead, tbody, th, td, tr { display: block; }
-            thead tr { position: absolute; top: -9999px; left: -9999px; }
-            tr { border: 1px solid #ddd; margin-bottom: 15px; border-radius: 10px; background: #fff; padding: 5px; }
-            td { border: none; border-bottom: 1px solid #eee; position: relative; padding-left: 45% !important; text-align: right; }
-            td:before { 
-                position: absolute; left: 10px; width: 40%; font-weight: bold; 
-                text-align: left; content: attr(data-label); color: var(--secondary);
-            }
-        }
 
         .status-tag { padding: 4px 8px; border-radius: 5px; font-size: 11px; font-weight: bold; }
         .Initial { background: #bdc3c7; color: #333; }
         .In-Process { background: var(--warning); color: #333; }
         .Completed { background: var(--success); color: white; }
         
-        .btn-call { background: #2ecc71; color: white; padding: 5px 10px; border-radius: 5px; text-decoration: none; font-size: 12px; display: inline-block; }
+        .group-badge { background: #9b59b6; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; display: inline-block; margin-bottom: 4px;}
+        .leader-badge { background: #e67e22; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; display: inline-block; margin-bottom: 4px;}
+        select[multiple] { height: 100px; }
         .btn-del { background: var(--danger); width: auto; padding: 5px 10px; font-size: 11px; margin-left: 5px;}
     </style>
 </head>
@@ -75,47 +60,47 @@
         <h2>Admin Management</h2>
         
         <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <h3 style="margin:0">📊 Analytical Filter</h3>
-                <button onclick="setFilter('All')" style="width: auto; padding: 5px 12px; background: var(--secondary); font-size: 12px;">Reset View</button>
-            </div>
             <div class="flex-row">
-                <div class="stat-box" onclick="setFilter('Initial')" style="background: #7f8c8d;">
-                    <small>Initial</small><b id="stat-initial">0</b>
-                </div>
-                <div class="stat-box" onclick="setFilter('In-Process')" style="background: var(--warning); color: #333;">
-                    <small>In-Process</small><b id="stat-progress">0</b>
-                </div>
-                <div class="stat-box" onclick="setFilter('Completed')" style="background: var(--success);">
-                    <small>Completed</small><b id="stat-completed">0</b>
-                </div>
+                <div class="stat-box" onclick="setFilter('Initial')" style="background: #7f8c8d;"><small>Initial</small><b id="stat-initial">0</b></div>
+                <div class="stat-box" onclick="setFilter('In-Process')" style="background: var(--warning); color: #333;"><small>In-Process</small><b id="stat-progress">0</b></div>
+                <div class="stat-box" onclick="setFilter('Completed')" style="background: var(--success);"><small>Completed</small><b id="stat-completed">0</b></div>
             </div>
         </div>
 
         <div class="flex-row">
-            <div class="card" style="flex: 1; border-top: 4px solid var(--primary);">
+            <div class="card" style="flex: 1; min-width: 250px; border-top: 4px solid var(--primary);">
                 <h3>Staff Registration</h3>
                 <input type="text" id="reg-name" placeholder="Full Name">
                 <input type="text" id="reg-code" placeholder="Employee Code">
-                <input type="text" id="reg-desig" placeholder="Designation (e.g. Sales)">
+                <input type="text" id="reg-desig" placeholder="Designation">
                 <input type="tel" id="reg-phone" placeholder="Phone Number">
                 <button onclick="saveEmployee()">Register Staff</button>
             </div>
-            <div class="card" style="flex: 1; border-top: 4px solid var(--accent);">
-                <h3>Assign New Task</h3>
-                <select id="task-assignee"><option>Loading...</option></select>
+
+            <div class="card" style="flex: 1; min-width: 250px; border-top: 4px solid #9b59b6;">
+                <h3>Make Group & Assign</h3>
+                <input type="text" id="group-name-input" placeholder="Enter Group Name">
+                <p style="font-size:11px; color:#666; margin:0;">Select Group Leader:</p>
+                <select id="group-leader-select"></select>
+                <p style="font-size:11px; color:#666; margin:0;">Select Members (Hold Ctrl/Cmd):</p>
+                <select id="group-members-select" multiple></select>
+                <input type="text" id="group-task-name" placeholder="Task for the Group">
+                <button onclick="assignGroupTask()" style="background: #9b59b6;">Assign to Group</button>
+            </div>
+
+            <div class="card" style="flex: 1; min-width: 250px; border-top: 4px solid var(--accent);">
+                <h3>Assign Single Task</h3>
+                <select id="task-assignee"></select>
                 <input type="text" id="task-name" placeholder="Task Details">
-                <button onclick="assignTask()" style="background: var(--success);">Assign Now</button>
+                <button onclick="assignTask()" style="background: var(--success);">Assign Single</button>
             </div>
         </div>
 
-        <button onclick="exportCSV()" style="background: #27ae60; margin-bottom: 20px;">📥 Download Detailed CSV</button>
-
         <h3>Monitoring Table</h3>
-        <table id="admin-table">
+        <table>
             <thead>
                 <tr>
-                    <th>Staff Info</th>
+                    <th>Staff/Group</th>
                     <th>Designation</th>
                     <th>Task Details</th>
                     <th>Status</th>
@@ -153,7 +138,7 @@
 
     function handleLogin() {
         const id = document.getElementById('login-id').value.trim();
-        if(id === 'ADMIN00001' || id === 'ASO-1' || id === 'ASO-2') {
+        if(['ADMIN00001', 'ASO-1', 'ASO-2'].includes(id)) {
             currentUser = { role: 'admin', id: id };
             showDashboard('admin');
         } else {
@@ -178,11 +163,6 @@
         }
     }
 
-    function setFilter(status) {
-        currentFilter = status;
-        loadAdminData();
-    }
-
     function saveEmployee() {
         const n = document.getElementById('reg-name').value;
         const c = document.getElementById('reg-code').value;
@@ -191,7 +171,6 @@
         if(n && c) {
             db.ref('employees/' + c).set({ name: n, code: c, designation: d, phone: p });
             alert("Staff Registered!");
-            document.querySelectorAll('#admin-dashboard input').forEach(i => i.value = "");
         }
     }
 
@@ -200,44 +179,84 @@
         const t = document.getElementById('task-name').value;
         if(t) {
             db.ref('tasks/' + c).push({ taskName: t, status: 'Initial', date: new Date().toLocaleDateString() });
-            alert("Task Assigned!");
-            document.getElementById('task-name').value = "";
+            alert("Single Task Assigned!");
         }
+    }
+
+    function assignGroupTask() {
+        const gName = document.getElementById('group-name-input').value;
+        const leader = document.getElementById('group-leader-select').value;
+        const select = document.getElementById('group-members-select');
+        const members = Array.from(select.selectedOptions).map(opt => opt.value);
+        const taskName = document.getElementById('group-task-name').value;
+
+        if (!gName || members.length < 1 || !taskName) return alert("Fill all fields, select leader and members");
+
+        const groupKey = db.ref('group_tasks').push().key;
+        db.ref('group_tasks/' + groupKey).set({
+            groupName: gName,
+            leader: leader,
+            taskName: taskName,
+            members: members,
+            status: 'Initial',
+            date: new Date().toLocaleDateString()
+        }).then(() => {
+            alert("Group Task Assigned!");
+            document.getElementById('group-task-name').value = "";
+            document.getElementById('group-name-input').value = "";
+        });
     }
 
     function loadAdminData() {
         db.ref('employees').on('value', snap => {
             let opts = "";
             globalEmpData = snap.val() || {}; 
-            snap.forEach(e => { opts += `<option value="${e.key}">${e.val().name}</option>`; });
+            snap.forEach(e => { opts += `<option value="${e.key}">${e.val().name} (${e.key})</option>`; });
             document.getElementById('task-assignee').innerHTML = opts;
+            document.getElementById('group-leader-select').innerHTML = opts;
+            document.getElementById('group-members-select').innerHTML = opts;
         });
 
-        db.ref('tasks').on('value', snap => {
-            let rows = ""; 
+        db.ref().on('value', snap => {
+            let rows = "";
             let counts = { Initial: 0, 'In-Process': 0, Completed: 0 };
-            
-            snap.forEach(empGroup => {
-                const staff = globalEmpData[empGroup.key] || { name: "N/A", designation: "N/A", phone: "" };
-                empGroup.forEach(tSnap => {
-                    const t = tSnap.val();
-                    counts[t.status]++;
+            const tasks = snap.child('tasks').val() || {};
+            const groupTasks = snap.child('group_tasks').val() || {};
 
+            Object.keys(tasks).forEach(empCode => {
+                const staff = globalEmpData[empCode] || { name: empCode, designation: "N/A" };
+                Object.keys(tasks[empCode]).forEach(tKey => {
+                    const t = tasks[empCode][tKey];
+                    counts[t.status]++;
                     if(currentFilter === 'All' || t.status === currentFilter) {
                         rows += `<tr>
-                            <td data-label="Staff Info"><b>${staff.name}</b><br><small>${empGroup.key}</small></td>
-                            <td data-label="Designation">${staff.designation || 'N/A'}</td>
-                            <td data-label="Task">${t.taskName}</td>
-                            <td data-label="Status"><span class="status-tag ${t.status}">${t.status}</span></td>
-                            <td data-label="Action">
-                                ${staff.phone ? `<a href="tel:${staff.phone}" class="btn-call">📞 Call</a>` : ''}
-                                <button class="btn-del" onclick="deleteTask('${empGroup.key}','${tSnap.key}')">Del</button>
-                            </td>
+                            <td><b>${staff.name}</b><br><small>${empCode}</small></td>
+                            <td>${staff.designation || 'N/A'}</td>
+                            <td>${t.taskName}</td>
+                            <td><span class="status-tag ${t.status}">${t.status}</span></td>
+                            <td><button class="btn-del" onclick="deleteTask('${empCode}','${tKey}','single')">Del</button></td>
                         </tr>`;
                     }
                 });
             });
-            document.getElementById('admin-list').innerHTML = rows || "<tr><td colspan='5' style='text-align:center'>No tasks found.</td></tr>";
+
+            Object.keys(groupTasks).forEach(gKey => {
+                const gt = groupTasks[gKey];
+                counts[gt.status]++;
+                if(currentFilter === 'All' || gt.status === currentFilter) {
+                    const leaderName = globalEmpData[gt.leader]?.name || gt.leader;
+                    const memberNames = gt.members.map(m => globalEmpData[m]?.name || m).join(", ");
+                    rows += `<tr style="background:#f9f1ff">
+                        <td><span class="group-badge">${gt.groupName || 'GROUP'}</span><br><small>${memberNames}</small></td>
+                        <td><span class="leader-badge">LEADER: ${leaderName}</span></td>
+                        <td>${gt.taskName}</td>
+                        <td><span class="status-tag ${gt.status}">${gt.status}</span></td>
+                        <td><button class="btn-del" onclick="deleteTask(null,'${gKey}','group')">Del</button></td>
+                    </tr>`;
+                }
+            });
+
+            document.getElementById('admin-list').innerHTML = rows;
             document.getElementById('stat-initial').innerText = counts.Initial;
             document.getElementById('stat-progress').innerText = counts['In-Process'];
             document.getElementById('stat-completed').innerText = counts.Completed;
@@ -245,50 +264,53 @@
     }
 
     function loadEmployeeTasks() {
-        db.ref('tasks/' + currentUser.code).on('value', snap => {
+        const empCode = currentUser.code;
+        db.ref().on('value', snap => {
             let html = "";
-            snap.forEach(tSnap => {
-                const t = tSnap.val();
-                html += `<div class="card" style="border-left:5px solid var(--accent)">
-                    <p><b>Task:</b> ${t.taskName}</p>
-                    <select id="sel-${tSnap.key}">
-                        <option value="Initial" ${t.status=='Initial'?'selected':''}>Initial</option>
-                        <option value="In-Process" ${t.status=='In-Process'?'selected':''}>In-Process</option>
-                        <option value="Completed" ${t.status=='Completed'?'selected':''}>Completed</option>
-                    </select>
-                    <button onclick="updateStatus('${tSnap.key}')" style="background:var(--success)">Update Status</button>
-                </div>`;
+            const tasks = snap.child('tasks/' + empCode).val() || {};
+            const groupTasks = snap.child('group_tasks').val() || {};
+
+            Object.keys(tasks).forEach(tid => {
+                html += createTaskCard(tasks[tid].taskName, tasks[tid].status, tid, 'single');
             });
-            document.getElementById('emp-task-cards').innerHTML = html || "No tasks assigned.";
+
+            Object.keys(groupTasks).forEach(gid => {
+                if(groupTasks[gid].members.includes(empCode)) {
+                    const gName = groupTasks[gid].groupName || "Group Task";
+                    html += createTaskCard(`${gName}: ${groupTasks[gid].taskName}`, groupTasks[gid].status, gid, 'group');
+                }
+            });
+            document.getElementById('emp-task-cards').innerHTML = html || "No tasks.";
         });
     }
 
-    function updateStatus(tid) {
-        const val = document.getElementById('sel-'+tid).value;
-        db.ref('tasks/' + currentUser.code + '/' + tid).update({ status: val }).then(() => alert("Updated!"));
+    function createTaskCard(name, status, id, type) {
+        return `<div class="card" style="border-left:5px solid ${type === 'group' ? '#9b59b6' : '#3498db'}">
+            ${type === 'group' ? '<span class="group-badge">GROUP TASK</span>' : ''}
+            <p><b>${name}</b></p>
+            <select id="sel-${id}">
+                <option value="Initial" ${status=='Initial'?'selected':''}>Initial</option>
+                <option value="In-Process" ${status=='In-Process'?'selected':''}>In-Process</option>
+                <option value="Completed" ${status=='Completed'?'selected':''}>Completed</option>
+            </select>
+            <button onclick="updateStatus('${id}', '${type}')" style="background:var(--success)">Update Status</button>
+        </div>`;
     }
 
-    function deleteTask(eid, tid) { if(confirm("Delete task?")) db.ref(`tasks/${eid}/${tid}`).remove(); }
-    
-    function exportCSV() {
-        db.ref('tasks').once('value', snap => {
-            let csv = "Staff Name,Emp Code,Designation,Phone,Task,Status,Date\n";
-            snap.forEach(eg => {
-                const staff = globalEmpData[eg.key] || { name: "N/A", designation: "N/A", phone: "N/A" };
-                eg.forEach(t => { 
-                    const d = t.val();
-                    csv += `"${staff.name}","${eg.key}","${staff.designation}","${staff.phone}","${d.taskName}","${d.status}","${d.date}"\n`;
-                });
-            });
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'Detailed_Task_Report.csv';
-            link.click();
-        });
+    function updateStatus(id, type) {
+        const val = document.getElementById('sel-'+id).value;
+        const path = type === 'single' ? `tasks/${currentUser.code}/${id}` : `group_tasks/${id}`;
+        db.ref(path).update({ status: val }).then(() => alert("Status Updated!"));
+    }
+
+    function deleteTask(empCode, tKey, type) {
+        if(!confirm("Delete?")) return;
+        const path = type === 'single' ? `tasks/${empCode}/${tKey}` : `group_tasks/${tKey}`;
+        db.ref(path).remove();
     }
 
     function logout() { location.reload(); }
+    function setFilter(s) { currentFilter = s; loadAdminData(); }
 </script>
 </body>
 </html>
