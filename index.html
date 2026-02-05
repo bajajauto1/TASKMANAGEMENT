@@ -321,21 +321,47 @@
         });
     }
 
-    // --- EMPLOYEE DASHBOARD LOGIC ---
+    // --- EMPLOYEE DASHBOARD LOGIC (SOLVED: ADDED GROUP TASKS) ---
     function loadEmployeeTasks() {
         db.ref().on('value', snap => {
             let html = "";
-            const t = snap.child('tasks/'+currentUser.code).val() || {};
-            Object.keys(t).forEach(k => {
-                html += `<div class="action-card"><h3>${t[k].taskName}</h3>
+            
+            // 1. Load Individual Tasks
+            const individualTasks = snap.child('tasks/'+currentUser.code).val() || {};
+            Object.keys(individualTasks).forEach(k => {
+                const t = individualTasks[k];
+                html += `<div class="action-card" style="border-top: 5px solid var(--success);">
+                <small style="color:var(--gray)">INDIVIDUAL TASK</small>
+                <h3>${t.taskName}</h3>
                 <select id="s-${k}" style="margin-bottom:10px;">
-                    <option value="Initial" ${t[k].status==='Initial'?'selected':''}>Initial</option>
-                    <option value="In-Process" ${t[k].status==='In-Process'?'selected':''}>In-Process</option>
-                    <option value="Completed" ${t[k].status==='Completed'?'selected':''}>Completed</option>
+                    <option value="Initial" ${t.status==='Initial'?'selected':''}>Initial</option>
+                    <option value="In-Process" ${t.status==='In-Process'?'selected':''}>In-Process</option>
+                    <option value="Completed" ${t.status==='Completed'?'selected':''}>Completed</option>
                 </select>
                 <button onclick="updateStatus('${k}','single')" class="btn-grad" style="background:var(--accent); padding:8px;">Update Status</button></div>`;
             });
-            document.getElementById('emp-task-cards').innerHTML = html || "<p>No tasks assigned.</p>";
+
+            // 2. Load Group Tasks (where user is Leader or Member)
+            const groupTasks = snap.child('group_tasks').val() || {};
+            Object.keys(groupTasks).forEach(gk => {
+                const g = groupTasks[gk];
+                const isMember = g.members && g.members.includes(currentUser.code);
+                const isLeader = g.leader === currentUser.code;
+                
+                if(isLeader || isMember) {
+                    html += `<div class="action-card" style="border-top: 5px solid var(--purple); background: #fdfaff;">
+                    <small style="color:var(--purple); font-weight:bold;">GROUP: ${g.groupName} ${isLeader ? '(LEADER)' : '(MEMBER)'}</small>
+                    <h3>${g.taskName}</h3>
+                    <select id="s-${gk}" style="margin-bottom:10px;">
+                        <option value="Initial" ${g.status==='Initial'?'selected':''}>Initial</option>
+                        <option value="In-Process" ${g.status==='In-Process'?'selected':''}>In-Process</option>
+                        <option value="Completed" ${g.status==='Completed'?'selected':''}>Completed</option>
+                    </select>
+                    <button onclick="updateStatus('${gk}','group')" class="btn-grad" style="background:var(--purple); padding:8px;">Update Group Status</button></div>`;
+                }
+            });
+
+            document.getElementById('emp-task-cards').innerHTML = html || "<p>No individual or group tasks assigned.</p>";
         });
     }
 
