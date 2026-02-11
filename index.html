@@ -162,12 +162,12 @@
                         <option>EXPERT CORP</option><option>DELTA FORCE</option>
                         <option>G4S</option><option>SIS</option><option>TERRIER</option>
                     </select>
-                    <button onclick="assignCompliance()" class="btn-grad" style="background: var(--teal); margin-top:15px;">Generate Compliance Flow</button>
-                    <button onclick="resetCompliance()" class="btn-grad" style="background: var(--danger); margin-top:10px;">MONTHLY RESET COMPLIANCE</button>
+                    <button onclick="assignCompliance()" class="btn-grad" style="background: var(--teal); margin-top:15px;">Generate Procurement Flow</button>
+                    <button onclick="resetCompliance()" class="btn-grad" style="background: var(--danger); margin-top:10px;">MONTHLY RESET Procurement</button>
                 </div>
             </div>
             <div class="table-section">
-                <h3>Agency Compliance Status</h3>
+                <h3>Agency Procurement Status</h3>
                 <table>
                     <thead><tr><th>Employee</th><th>Agency</th><th>Steps Progress</th><th>Date</th><th>Action</th></tr></thead>
                     <tbody id="admin-compliance-list"></tbody>
@@ -184,7 +184,7 @@
         <div class="nav-tabs">
             <button class="nav-btn active" id="emp-tab-tasks" onclick="switchEmpTab('tasks')">General Tasks</button>
             <button class="nav-btn" id="emp-tab-bill" onclick="switchEmpTab('billing')">Billing Checklist</button>
-            <button class="nav-btn" id="emp-tab-comp" onclick="switchEmpTab('compliance')">Compliance Checklist</button>
+            <button class="nav-btn" id="emp-tab-comp" onclick="switchEmpTab('compliance')">Procurement Checklist</button>
         </div>
         <div id="employee-task-view"><div id="emp-task-cards" class="admin-actions-grid"></div></div>
         <div id="employee-billing-view" class="hidden"><div id="emp-billing-cards" class="admin-actions-grid"></div></div>
