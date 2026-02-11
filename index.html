@@ -11,7 +11,7 @@
         :root { 
             --primary: #2c3e50; --secondary: #34495e; --accent: #3498db; 
             --light: #f8f9fa; --success: #27ae60; --danger: #e74c3c; --warning: #f1c40f;
-            --purple: #9b59b6; --gray: #718096; --gold: #f39c12;
+            --purple: #9b59b6; --gray: #718096; --gold: #f39c12; --teal: #1abc9c;
         }
         
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f2f5; margin: 0; padding: 10px; color: #1a202c; }
@@ -19,7 +19,7 @@
         .hidden { display: none !important; }
         
         .dashboard-header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 25px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
-        .nav-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .nav-tabs { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .nav-btn { padding: 10px 20px; border-radius: 8px; border: 1px solid #ddd; background: white; cursor: pointer; font-weight: 700; transition: 0.3s; }
         .nav-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
@@ -79,6 +79,7 @@
         <div class="nav-tabs">
             <button class="nav-btn active" id="tab-tasks" onclick="switchAdminTab('tasks')">Task Management</button>
             <button class="nav-btn" id="tab-billing" onclick="switchAdminTab('billing')">Agency Billing Flow</button>
+            <button class="nav-btn" id="tab-compliance" onclick="switchAdminTab('compliance')">Material Procurement</button>
         </div>
 
         <div id="admin-task-view">
@@ -87,7 +88,6 @@
                 <div class="stat-box" style="background: var(--warning); color:#333;"><small>IN-PROCESS</small><b id="stat-progress">0</b></div>
                 <div class="stat-box" style="background: var(--success);"><small>COMPLETED</small><b id="stat-completed">0</b></div>
             </div>
-
             <div class="admin-actions-grid">
                 <div class="action-card">
                     <div class="action-header"><div class="icon-circle" style="background: var(--primary);">+</div><h3>Staff Registration</h3></div>
@@ -97,18 +97,16 @@
                     <input type="tel" id="reg-phone" placeholder="Phone Number">
                     <button onclick="saveEmployee()" class="btn-grad" style="background: var(--primary); margin-top:15px;">Save Staff</button>
                 </div>
-
                 <div class="action-card">
                     <div class="action-header"><div class="icon-circle" style="background: var(--purple);">G</div><h3>Group Assignment</h3></div>
                     <input type="text" id="group-name-input" placeholder="Group Name" style="margin-bottom:8px;">
-                    <span class="input-label">Leader (Code - Name)</span>
+                    <span class="input-label">Leader</span>
                     <select id="group-leader-select" style="margin-bottom:8px;"></select>
-                    <span class="input-label">Members (Hold Ctrl to select)</span>
+                    <span class="input-label">Members</span>
                     <select id="group-members-select" multiple style="height: 80px; margin-bottom:8px;"></select>
                     <input type="text" id="group-task-name" placeholder="Group Objective">
                     <button onclick="assignGroupTask()" class="btn-grad" style="background: var(--purple); margin-top:15px;">Deploy Group</button>
                 </div>
-
                 <div class="action-card">
                     <div class="action-header"><div class="icon-circle" style="background: var(--success);">T</div><h3>Individual Task</h3></div>
                     <select id="task-assignee" style="margin-bottom:8px;"></select>
@@ -116,7 +114,6 @@
                     <button onclick="assignTask()" class="btn-grad" style="background: var(--success); margin-top:15px;">Assign Task</button>
                 </div>
             </div>
-
             <div class="table-section">
                 <h3>Live Task Feed</h3>
                 <table>
@@ -151,6 +148,32 @@
                 </table>
             </div>
         </div>
+
+        <div id="admin-compliance-view" class="hidden">
+            <div class="admin-actions-grid">
+                <div class="action-card">
+                    <div class="action-header"><div class="icon-circle" style="background: var(--teal);">C</div><h3>New Procurement Assignement</h3></div>
+                    <span class="input-label">Assign To Employee</span>
+                    <select id="comp-assignee" style="margin-bottom:8px;"></select>
+                    <span class="input-label">Select Agency</span>
+                    <select id="comp-agency">
+                        <option>ANSEC</option><option>BAKUL</option><option>SCRUM</option>
+                        <option>COMMANDO DOG</option><option>SWIFT SECURITY</option>
+                        <option>EXPERT CORP</option><option>DELTA FORCE</option>
+                        <option>G4S</option><option>SIS</option><option>TERRIER</option>
+                    </select>
+                    <button onclick="assignCompliance()" class="btn-grad" style="background: var(--teal); margin-top:15px;">Generate Compliance Flow</button>
+                    <button onclick="resetCompliance()" class="btn-grad" style="background: var(--danger); margin-top:10px;">MONTHLY RESET COMPLIANCE</button>
+                </div>
+            </div>
+            <div class="table-section">
+                <h3>Agency Compliance Status</h3>
+                <table>
+                    <thead><tr><th>Employee</th><th>Agency</th><th>Steps Progress</th><th>Date</th><th>Action</th></tr></thead>
+                    <tbody id="admin-compliance-list"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <div id="employee-dashboard" class="hidden">
@@ -161,9 +184,11 @@
         <div class="nav-tabs">
             <button class="nav-btn active" id="emp-tab-tasks" onclick="switchEmpTab('tasks')">General Tasks</button>
             <button class="nav-btn" id="emp-tab-bill" onclick="switchEmpTab('billing')">Billing Checklist</button>
+            <button class="nav-btn" id="emp-tab-comp" onclick="switchEmpTab('compliance')">Compliance Checklist</button>
         </div>
         <div id="employee-task-view"><div id="emp-task-cards" class="admin-actions-grid"></div></div>
         <div id="employee-billing-view" class="hidden"><div id="emp-billing-cards" class="admin-actions-grid"></div></div>
+        <div id="employee-compliance-view" class="hidden"><div id="emp-compliance-cards" class="admin-actions-grid"></div></div>
     </div>
 </div>
 
@@ -203,36 +228,41 @@
             document.getElementById('admin-dashboard').classList.remove('hidden');
             loadAdminData();
             loadBillingAdmin();
+            loadComplianceAdmin();
         } else {
             document.getElementById('employee-dashboard').classList.remove('hidden');
             document.getElementById('display-emp-name').innerText = `${currentUser.name} (${currentUser.code})`;
             loadEmployeeTasks();
             loadEmployeeBilling();
+            loadEmployeeCompliance();
         }
     }
 
     function switchAdminTab(view) {
         document.getElementById('admin-task-view').classList.toggle('hidden', view !== 'tasks');
         document.getElementById('admin-billing-view').classList.toggle('hidden', view !== 'billing');
+        document.getElementById('admin-compliance-view').classList.toggle('hidden', view !== 'compliance');
+        
         document.getElementById('tab-tasks').classList.toggle('active', view === 'tasks');
         document.getElementById('tab-billing').classList.toggle('active', view === 'billing');
+        document.getElementById('tab-compliance').classList.toggle('active', view === 'compliance');
     }
 
     function switchEmpTab(view) {
         document.getElementById('employee-task-view').classList.toggle('hidden', view !== 'tasks');
         document.getElementById('employee-billing-view').classList.toggle('hidden', view !== 'billing');
+        document.getElementById('employee-compliance-view').classList.toggle('hidden', view !== 'compliance');
+
         document.getElementById('emp-tab-tasks').classList.toggle('active', view === 'tasks');
         document.getElementById('emp-tab-bill').classList.toggle('active', view === 'billing');
+        document.getElementById('emp-tab-comp').classList.toggle('active', view === 'compliance');
     }
 
-    // --- ADMIN TASK LOGIC ---
+    // --- ADMIN LOGIC ---
     function saveEmployee() {
         const n = document.getElementById('reg-name').value, c = document.getElementById('reg-code').value;
         const d = document.getElementById('reg-desig').value, p = document.getElementById('reg-phone').value;
-        if(n && c) { 
-            db.ref('employees/'+c).set({name:n, code:c, designation:d, phone:p})
-            .then(() => { alert("Staff Registered Successfully!"); });
-        }
+        if(n && c) { db.ref('employees/'+c).set({name:n, code:c, designation:d, phone:p}).then(() => { alert("Staff Registered!"); }); }
     }
 
     function assignTask() {
@@ -241,19 +271,11 @@
     }
 
     function assignGroupTask() {
-        const gName = document.getElementById('group-name-input').value;
-        const leaderCode = document.getElementById('group-leader-select').value;
+        const gName = document.getElementById('group-name-input').value, leaderCode = document.getElementById('group-leader-select').value;
         const members = Array.from(document.getElementById('group-members-select').selectedOptions).map(o => o.value);
         const task = document.getElementById('group-task-name').value;
         if(gName && task) {
-            db.ref('group_tasks').push({
-                groupName: gName, 
-                leader: leaderCode, 
-                leaderName: globalEmpData[leaderCode].name,
-                members: members, 
-                taskName: task, 
-                status: 'Initial'
-            });
+            db.ref('group_tasks').push({ groupName: gName, leader: leaderCode, leaderName: globalEmpData[leaderCode].name, members: members, taskName: task, status: 'Initial' });
             alert("Group Task Deployed!");
         }
     }
@@ -262,9 +284,7 @@
     function assignBilling() {
         const c = document.getElementById('bill-assignee').value, agency = document.getElementById('bill-agency').value;
         const flow = {}; flowSteps.forEach(s => flow[s.replace(/ /g,"_")] = false);
-        db.ref('agency_billing').push({
-            empCode: c, empName: globalEmpData[c].name, agency: agency, flow: flow, date: new Date().toLocaleDateString()
-        });
+        db.ref('agency_billing').push({ empCode: c, empName: globalEmpData[c].name, agency: agency, flow: flow, date: new Date().toLocaleDateString() });
         alert("Billing Flow Started!");
     }
 
@@ -273,12 +293,11 @@
             let rows = "";
             snap.forEach(child => {
                 const b = child.val();
-                let pills = "";
-                flowSteps.forEach(s => {
+                let pills = ""; flowSteps.forEach(s => {
                     const key = s.replace(/ /g,"_");
                     pills += `<span class="step-pill ${b.flow && b.flow[key] ? 'done' : ''}">${s}</span>`;
                 });
-                rows += `<tr><td>${b.empName} (${b.empCode})</td><td><b>${b.agency}</b></td><td>${pills}</td><td>${b.date}</td>
+                rows += `<tr><td>${b.empName}</td><td><b>${b.agency}</b></td><td>${pills}</td><td>${b.date}</td>
                 <td><button onclick="deleteBill('${child.key}')" style="color:red; border:none; background:none; cursor:pointer;">Delete</button></td></tr>`;
             });
             document.getElementById('admin-billing-list').innerHTML = rows;
@@ -287,7 +306,35 @@
 
     function updateBillStep(id, key, val) { db.ref(`agency_billing/${id}/flow/${key}`).set(val); }
     function deleteBill(id) { if(confirm("Delete this billing flow?")) db.ref('agency_billing/'+id).remove(); }
-    function resetBilling() { if(confirm("Reset ALL billing for the new month?")) db.ref('agency_billing').remove(); }
+    function resetBilling() { if(confirm("Reset ALL billing?")) db.ref('agency_billing').remove(); }
+
+    // --- COMPLIANCE LOGIC (NEW) ---
+    function assignCompliance() {
+        const c = document.getElementById('comp-assignee').value, agency = document.getElementById('comp-agency').value;
+        const flow = {}; flowSteps.forEach(s => flow[s.replace(/ /g,"_")] = false);
+        db.ref('compliance_flow').push({ empCode: c, empName: globalEmpData[c].name, agency: agency, flow: flow, date: new Date().toLocaleDateString() });
+        alert("Compliance Flow Started!");
+    }
+
+    function loadComplianceAdmin() {
+        db.ref('compliance_flow').on('value', snap => {
+            let rows = "";
+            snap.forEach(child => {
+                const b = child.val();
+                let pills = ""; flowSteps.forEach(s => {
+                    const key = s.replace(/ /g,"_");
+                    pills += `<span class="step-pill ${b.flow && b.flow[key] ? 'done' : ''}">${s}</span>`;
+                });
+                rows += `<tr><td>${b.empName}</td><td><b>${b.agency}</b></td><td>${pills}</td><td>${b.date}</td>
+                <td><button onclick="deleteCompliance('${child.key}')" style="color:red; border:none; background:none; cursor:pointer;">Delete</button></td></tr>`;
+            });
+            document.getElementById('admin-compliance-list').innerHTML = rows;
+        });
+    }
+
+    function updateComplianceStep(id, key, val) { db.ref(`compliance_flow/${id}/flow/${key}`).set(val); }
+    function deleteCompliance(id) { if(confirm("Delete this compliance flow?")) db.ref('compliance_flow/'+id).remove(); }
+    function resetCompliance() { if(confirm("Reset ALL compliance?")) db.ref('compliance_flow').remove(); }
 
     // --- DATA REFRESH ---
     function loadAdminData() {
@@ -298,12 +345,12 @@
             document.getElementById('group-leader-select').innerHTML = opts;
             document.getElementById('group-members-select').innerHTML = opts;
             document.getElementById('bill-assignee').innerHTML = opts;
+            document.getElementById('comp-assignee').innerHTML = opts;
         });
 
         db.ref().on('value', snap => {
             let rows = "", counts = {Initial:0, 'In-Process':0, Completed:0};
             const tasks = snap.child('tasks').val() || {}, groups = snap.child('group_tasks').val() || {};
-
             Object.keys(tasks).forEach(code => {
                 Object.keys(tasks[code]).forEach(k => {
                     const t = tasks[code][k]; counts[t.status]++;
@@ -312,7 +359,7 @@
             });
             Object.keys(groups).forEach(k => {
                 const g = groups[k]; counts[g.status]++;
-                rows += `<tr style="background:#f9f5ff"><td><b>${g.groupName}</b> (Ldr: ${g.leaderName})</td><td>Group</td><td>${g.taskName}</td><td><span class="status-tag ${g.status}">${g.status}</span></td><td><button onclick="deleteTask(null,'${k}','group')">X</button></td></tr>`;
+                rows += `<tr style="background:#f9f5ff"><td><b>${g.groupName}</b></td><td>Group</td><td>${g.taskName}</td><td><span class="status-tag ${g.status}">${g.status}</span></td><td><button onclick="deleteTask(null,'${k}','group')">X</button></td></tr>`;
             });
             document.getElementById('admin-list').innerHTML = rows;
             document.getElementById('stat-initial').innerText = counts.Initial;
@@ -321,47 +368,26 @@
         });
     }
 
-    // --- EMPLOYEE DASHBOARD LOGIC (SOLVED: ADDED GROUP TASKS) ---
+    // --- EMPLOYEE DASHBOARD LOGIC ---
     function loadEmployeeTasks() {
         db.ref().on('value', snap => {
             let html = "";
-            
-            // 1. Load Individual Tasks
             const individualTasks = snap.child('tasks/'+currentUser.code).val() || {};
             Object.keys(individualTasks).forEach(k => {
                 const t = individualTasks[k];
-                html += `<div class="action-card" style="border-top: 5px solid var(--success);">
-                <small style="color:var(--gray)">INDIVIDUAL TASK</small>
-                <h3>${t.taskName}</h3>
-                <select id="s-${k}" style="margin-bottom:10px;">
-                    <option value="Initial" ${t.status==='Initial'?'selected':''}>Initial</option>
-                    <option value="In-Process" ${t.status==='In-Process'?'selected':''}>In-Process</option>
-                    <option value="Completed" ${t.status==='Completed'?'selected':''}>Completed</option>
-                </select>
-                <button onclick="updateStatus('${k}','single')" class="btn-grad" style="background:var(--accent); padding:8px;">Update Status</button></div>`;
+                html += `<div class="action-card" style="border-top: 5px solid var(--success);"><small>INDIVIDUAL</small><h3>${t.taskName}</h3>
+                <select id="s-${k}"><option value="Initial" ${t.status==='Initial'?'selected':''}>Initial</option><option value="In-Process" ${t.status==='In-Process'?'selected':''}>In-Process</option><option value="Completed" ${t.status==='Completed'?'selected':''}>Completed</option></select>
+                <button onclick="updateStatus('${k}','single')" class="btn-grad" style="background:var(--accent); margin-top:10px;">Update</button></div>`;
             });
-
-            // 2. Load Group Tasks (where user is Leader or Member)
             const groupTasks = snap.child('group_tasks').val() || {};
             Object.keys(groupTasks).forEach(gk => {
-                const g = groupTasks[gk];
-                const isMember = g.members && g.members.includes(currentUser.code);
-                const isLeader = g.leader === currentUser.code;
-                
-                if(isLeader || isMember) {
-                    html += `<div class="action-card" style="border-top: 5px solid var(--purple); background: #fdfaff;">
-                    <small style="color:var(--purple); font-weight:bold;">GROUP: ${g.groupName} ${isLeader ? '(LEADER)' : '(MEMBER)'}</small>
-                    <h3>${g.taskName}</h3>
-                    <select id="s-${gk}" style="margin-bottom:10px;">
-                        <option value="Initial" ${g.status==='Initial'?'selected':''}>Initial</option>
-                        <option value="In-Process" ${g.status==='In-Process'?'selected':''}>In-Process</option>
-                        <option value="Completed" ${g.status==='Completed'?'selected':''}>Completed</option>
-                    </select>
-                    <button onclick="updateStatus('${gk}','group')" class="btn-grad" style="background:var(--purple); padding:8px;">Update Group Status</button></div>`;
+                const g = groupTasks[gk]; if(g.leader === currentUser.code || (g.members && g.members.includes(currentUser.code))) {
+                    html += `<div class="action-card" style="border-top: 5px solid var(--purple);"><small>GROUP: ${g.groupName}</small><h3>${g.taskName}</h3>
+                    <select id="s-${gk}"><option value="Initial" ${g.status==='Initial'?'selected':''}>Initial</option><option value="In-Process" ${g.status==='In-Process'?'selected':''}>In-Process</option><option value="Completed" ${g.status==='Completed'?'selected':''}>Completed</option></select>
+                    <button onclick="updateStatus('${gk}','group')" class="btn-grad" style="background:var(--purple); margin-top:10px;">Update Group</button></div>`;
                 }
             });
-
-            document.getElementById('emp-task-cards').innerHTML = html || "<p>No individual or group tasks assigned.</p>";
+            document.getElementById('emp-task-cards').innerHTML = html || "<p>No tasks.</p>";
         });
     }
 
@@ -371,26 +397,36 @@
             snap.forEach(child => {
                 const b = child.val();
                 if(b.empCode === currentUser.code) {
-                    let checklist = "";
-                    flowSteps.forEach(s => {
+                    let checklist = ""; flowSteps.forEach(s => {
                         const key = s.replace(/ /g,"_");
-                        const checked = b.flow && b.flow[key] ? 'checked' : '';
-                        checklist += `<div class="flow-item"><input type="checkbox" ${checked} onchange="updateBillStep('${child.key}','${key}',this.checked)"> <label>${s}</label></div>`;
+                        checklist += `<div class="flow-item"><input type="checkbox" ${b.flow && b.flow[key] ? 'checked' : ''} onchange="updateBillStep('${child.key}','${key}',this.checked)"> <label>${s}</label></div>`;
                     });
-                    html += `<div class="action-card" style="border-left: 10px solid var(--gold)"><h3>${b.agency} Flow</h3><div class="flow-container">${checklist}</div></div>`;
+                    html += `<div class="action-card" style="border-left: 10px solid var(--gold)"><h3>${b.agency} Billing</h3><div class="flow-container">${checklist}</div></div>`;
                 }
             });
-            document.getElementById('emp-billing-cards').innerHTML = html || "<p>No agency billing flow assigned to you.</p>";
+            document.getElementById('emp-billing-cards').innerHTML = html || "<p>No billing assignments.</p>";
         });
     }
 
-    function updateStatus(id, type) {
-        const val = document.getElementById('s-'+id).value;
-        const path = type === 'single' ? `tasks/${currentUser.code}/${id}` : `group_tasks/${id}`;
-        db.ref(path).update({status:val}); alert("Task Status Updated!");
+    function loadEmployeeCompliance() {
+        db.ref('compliance_flow').on('value', snap => {
+            let html = "";
+            snap.forEach(child => {
+                const b = child.val();
+                if(b.empCode === currentUser.code) {
+                    let checklist = ""; flowSteps.forEach(s => {
+                        const key = s.replace(/ /g,"_");
+                        checklist += `<div class="flow-item"><input type="checkbox" ${b.flow && b.flow[key] ? 'checked' : ''} onchange="updateComplianceStep('${child.key}','${key}',this.checked)"> <label>${s}</label></div>`;
+                    });
+                    html += `<div class="action-card" style="border-left: 10px solid var(--teal)"><h3>${b.agency} Compliance</h3><div class="flow-container">${checklist}</div></div>`;
+                }
+            });
+            document.getElementById('emp-compliance-cards').innerHTML = html || "<p>No compliance assignments.</p>";
+        });
     }
 
-    function deleteTask(code, k, type) { if(confirm("Delete Task?")) db.ref(type==='single' ? `tasks/${code}/${k}` : `group_tasks/${k}`).remove(); }
+    function updateStatus(id, type) { const val = document.getElementById('s-'+id).value; db.ref(type === 'single' ? `tasks/${currentUser.code}/${id}` : `group_tasks/${id}`).update({status:val}); alert("Status Updated!"); }
+    function deleteTask(code, k, type) { if(confirm("Delete?")) db.ref(type==='single' ? `tasks/${code}/${k}` : `group_tasks/${k}`).remove(); }
     function logout() { location.reload(); }
 </script>
 </body>
