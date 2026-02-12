@@ -39,6 +39,7 @@
         input, select, textarea { padding: 12px; width: 100%; border: 2px solid #edf2f7; border-radius: 8px; box-sizing: border-box; background: #f7fafc; font-size: 14px; margin-bottom: 10px; }
         .btn-grad { padding: 14px; border-radius: 8px; border: none; color: white; font-weight: 700; cursor: pointer; transition: 0.3s; }
 
+        /* NEW: Vertical Material Card Design */
         .material-card { background: white; border-radius: 12px; border: 1px solid #edf2f7; margin-bottom: 15px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
         .material-card-header { padding: 18px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #fff; transition: 0.2s; }
         .material-card-header:hover { background: #f8fafc; }
@@ -50,15 +51,18 @@
         .badge-qty { background: var(--teal); color: white; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; }
         .vendor-box { background: white; padding: 12px; border-radius: 8px; border: 1px dashed var(--teal); margin-bottom: 15px; }
 
+        /* Flowchart steps */
         .vertical-flow { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
         .flow-step-item { display: flex; align-items: center; gap: 12px; padding: 10px; background: white; border-radius: 8px; border: 1px solid #edf2f7; font-size: 13px; }
         .flow-step-item input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--teal); }
 
+        /* Tables (General/Billing) */
         .table-section { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 900px; }
         th { background: #f8fafc; color: var(--gray); font-size: 11px; padding: 15px; text-align: left; text-transform: uppercase; }
         td { padding: 15px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
         
+        /* UPDATED REMARKS STYLING */
         .status-tag { padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; }
         .Assigned { background: #e2e8f0; color: #4a5568; }
         .WIP { background: #feebc8; color: #92400e; }
@@ -66,10 +70,6 @@
         
         .step-pill { display: inline-block; padding: 2px 6px; border-radius: 4px; background: #edf2f7; font-size: 9px; margin: 2px; }
         .step-pill.done { background: var(--success); color: white; }
-
-        /* Export Button Style */
-        .btn-export { background: #fff; border: 1px solid var(--accent); color: var(--accent); padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; }
-        .btn-export:hover { background: var(--accent); color: #fff; }
     </style>
 </head>
 <body>
@@ -130,10 +130,7 @@
                 </div>
             </div>
             <div class="table-section">
-                <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <h3>Live Task Feed</h3>
-                    <button class="btn-export" onclick="exportTasks()">Download CSV</button>
-                </div>
+                <h3>Live Task Feed</h3>
                 <table>
                     <thead><tr><th>Staff/Group</th><th>Type</th><th>Details</th><th>Status</th><th>Action</th></tr></thead>
                     <tbody id="admin-list"></tbody>
@@ -157,10 +154,6 @@
                 </div>
             </div>
             <div class="table-section">
-                <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <h3>Billing Records</h3>
-                    <button class="btn-export" onclick="exportBilling()">Download CSV</button>
-                </div>
                 <table>
                     <thead><tr><th>Employee</th><th>Agency</th><th>Progress</th><th>Date</th><th>Action</th></tr></thead>
                     <tbody id="admin-billing-list"></tbody>
@@ -183,10 +176,7 @@
                     <button onclick="assignMaterial()" class="btn-grad" style="background: var(--teal);">Create Procurement</button>
                 </div>
                 <div style="grid-column: span 2;">
-                    <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <h3>Material Tracking</h3>
-                        <button class="btn-export" onclick="exportMaterial()">Download CSV</button>
-                    </div>
+                    <h3>Material Tracking</h3>
                     <div id="admin-material-cards-container"></div>
                 </div>
             </div>
@@ -341,7 +331,7 @@
                     </div>`;
                 }
             });
-            document.getElementById('emp-material-cards').innerHTML = h || "<p>No materials assigned.</p>";
+            document.getElementById('emp-material-cards').innerHTML = html || "<p>No materials assigned.</p>";
         });
     }
 
@@ -421,58 +411,6 @@
                 }
             });
             document.getElementById('emp-billing-cards').innerHTML = h;
-        });
-    }
-
-    // --- CSV EXPORT LOGIC ---
-    function downloadCSV(filename, rows) {
-        const csvContent = rows.map(e => e.join(",")).join("\n");
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", filename);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-
-    function exportTasks() {
-        db.ref().once('value', snap => {
-            let csvRows = [["Staff/Group", "Type", "Details", "Status"]];
-            const tasks = snap.child('tasks').val() || {}, groups = snap.child('group_tasks').val() || {};
-            Object.keys(tasks).forEach(c => Object.keys(tasks[c]).forEach(k => {
-                const t = tasks[c][k];
-                csvRows.push([globalEmpData[c]?.name || c, "Individual", t.taskName.replace(/,/g, " "), t.status]);
-            }));
-            Object.keys(groups).forEach(k => {
-                const g = groups[k];
-                csvRows.push([g.groupName, "Group", g.taskName.replace(/,/g, " "), g.status]);
-            });
-            downloadCSV("Bajaj_Task_Feed.csv", csvRows);
-        });
-    }
-
-    function exportBilling() {
-        db.ref('agency_billing').once('value', snap => {
-            let csvRows = [["Employee", "Agency", "Date"]];
-            snap.forEach(c => {
-                const b = c.val();
-                csvRows.push([b.empName, b.agency, b.date]);
-            });
-            downloadCSV("Bajaj_Billing_Records.csv", csvRows);
-        });
-    }
-
-    function exportMaterial() {
-        db.ref('material_procurement').once('value', snap => {
-            let csvRows = [["Product", "Code", "Lead", "Vendor", "Qty", "Date"]];
-            snap.forEach(c => {
-                const m = c.val();
-                csvRows.push([m.productName, m.productCode, m.leadName, m.vendorName || "Pending", m.quantity, m.date]);
-            });
-            downloadCSV("Bajaj_Material_Tracking.csv", csvRows);
         });
     }
 
