@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bajaj Task Management Pro</title>
+    <title>Bajaj Task Management Pro - Super Admin</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     
@@ -63,6 +63,10 @@
         
         .step-pill { display: inline-block; padding: 2px 6px; border-radius: 4px; background: #edf2f7; font-size: 9px; margin: 2px; }
         .step-pill.done { background: var(--success); color: white; }
+
+        .super-admin-badge { background: #000; color: gold; padding: 2px 8px; border-radius: 4px; font-size: 10px; margin-left: 10px; }
+        .super-control-btn { padding: 4px 8px; font-size: 11px; margin-top: 5px; cursor: pointer; }
+        .export-btn { background: #2d3436; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 12px; margin-left: 10px; }
     </style>
 </head>
 <body>
@@ -80,7 +84,7 @@
 
     <div id="admin-dashboard" class="hidden">
         <div class="dashboard-header">
-            <h2>Admin Control Panel</h2>
+            <h2>Admin Control Panel <span id="super-badge-header"></span></h2>
             <button class="btn-grad" onclick="logout()" style="background: var(--danger); padding: 8px 20px;">Logout</button>
         </div>
 
@@ -123,7 +127,10 @@
                 </div>
             </div>
             <div class="table-section">
-                <h3>Live Task Feed</h3>
+                <div style="display:flex; justify-content: space-between; align-items:center;">
+                    <h3>Live Task Feed</h3>
+                    <button class="export-btn" onclick="exportTasksCSV()">⬇ Export Tasks CSV</button>
+                </div>
                 <table>
                     <thead><tr><th>Staff/Group</th><th>Type</th><th>Details</th><th>Status</th><th>Action</th></tr></thead>
                     <tbody id="admin-list"></tbody>
@@ -147,8 +154,12 @@
                 </div>
             </div>
             <div class="table-section">
+                <div style="display:flex; justify-content: space-between; align-items:center;">
+                    <h3>Agency Billing Status</h3>
+                    <button class="export-btn" onclick="exportBillingCSV()">⬇ Export Billing CSV</button>
+                </div>
                 <table>
-                    <thead><tr><th>Employee</th><th>Agency</th><th>Progress</th><th>Date</th><th>Action</th></tr></thead>
+                    <thead><tr><th>Employee</th><th>Agency</th><th>Progress Checklist</th><th>Date</th><th>Action</th></tr></thead>
                     <tbody id="admin-billing-list"></tbody>
                 </table>
             </div>
@@ -169,7 +180,10 @@
                     <button onclick="assignMaterial()" class="btn-grad" style="background: var(--teal);">Create Procurement</button>
                 </div>
                 <div style="grid-column: span 2;">
-                    <h3>Material Tracking</h3>
+                    <div style="display:flex; justify-content: space-between; align-items:center;">
+                        <h3>Material Tracking (Super Admin Control)</h3>
+                        <button class="export-btn" onclick="exportMaterialCSV()">⬇ Export Material CSV</button>
+                    </div>
                     <div id="admin-material-cards-container"></div>
                 </div>
             </div>
@@ -213,10 +227,73 @@
     const billingSteps = ["Approval Note", "PR", "Attendance Verification", "PO", "Billing Verification", "Release"];
     const materialSteps = ["1", "3 Quotations", "Negotiation Committee", "Approval Note", "Item Code Generation", "Vendor Name Update", "PR", "PO", "Material Received", "Billing Processed"];
 
+    // CSV HELPER
+    function downloadCSV(csv, filename) {
+        let csvFile = new Blob([csv], {type: "text/csv"});
+        let downloadLink = document.createElement("a");
+        downloadLink.download = filename;
+        downloadLink.href = window.URL.createObjectURL(csvFile);
+        downloadLink.style.display = "none";
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+    }
+
+    // EXPORT FUNCTIONS
+    function exportTasksCSV() {
+        db.ref().once('value', snap => {
+            let csv = "Staff/Group,Type,Task Details,Status,Date\n";
+            const tasks = snap.child('tasks').val() || {};
+            const groups = snap.child('group_tasks').val() || {};
+
+            Object.keys(tasks).forEach(c => Object.keys(tasks[c]).forEach(k => {
+                const t = tasks[c][k];
+                csv += `"${globalEmpData[c]?.name || c}","Individual","${t.taskName}","${t.status}","${t.date || ''}"\n`;
+            }));
+            Object.keys(groups).forEach(k => {
+                const g = groups[k];
+                csv += `"${g.groupName}","Group","${g.taskName}","${g.status}",""\n`;
+            });
+            downloadCSV(csv, "Bajaj_Task_Management.csv");
+        });
+    }
+
+    function exportBillingCSV() {
+        db.ref('agency_billing').once('value', snap => {
+            let csv = "Employee,Agency,Date," + billingSteps.join(",") + "\n";
+            snap.forEach(child => {
+                const b = child.val();
+                let row = `"${b.empName}","${b.agency}","${b.date}",`;
+                let steps = billingSteps.map(s => {
+                    const k = s.replace(/ /g,"_");
+                    return b.flow && b.flow[k] ? "COMPLETED" : "PENDING";
+                }).join(",");
+                csv += row + steps + "\n";
+            });
+            downloadCSV(csv, "Agency_Billing_Flow.csv");
+        });
+    }
+
+    function exportMaterialCSV() {
+        db.ref('material_procurement').once('value', snap => {
+            let csv = "Product Code,Product Name,Quantity,Lead,Vendor,Date," + materialSteps.join(",") + "\n";
+            snap.forEach(child => {
+                const m = child.val();
+                let row = `"${m.productCode}","${m.productName}","${m.quantity}","${m.leadName}","${m.vendorName || ''}","${m.date}",`;
+                let steps = materialSteps.map(s => {
+                    const k = s.replace(/ /g,"_");
+                    return m.flow && m.flow[k] ? "COMPLETED" : "PENDING";
+                }).join(",");
+                csv += row + steps + "\n";
+            });
+            downloadCSV(csv, "Material_Procurement.csv");
+        });
+    }
+
+    // LOGIN & CORE LOGIC
     function handleLogin() {
         const id = document.getElementById('login-id').value.trim();
-        if(['ADMIN00001', 'ASO1', 'ASO-2'].includes(id)) {
-            currentUser = { role: 'admin', id: id };
+        if(['SUPERADMIN', 'ADMIN00001', 'ASO1', 'ASO-2'].includes(id)) {
+            currentUser = { role: 'admin', id: id, isSuper: (id === 'SUPERADMIN') };
             showDashboard('admin');
         } else {
             db.ref('employees/' + id).once('value', snap => {
@@ -230,6 +307,7 @@
         document.getElementById('login-section').classList.add('hidden');
         if(type === 'admin') {
             document.getElementById('admin-dashboard').classList.remove('hidden');
+            if(currentUser.isSuper) document.getElementById('super-badge-header').innerHTML = `<span class="super-admin-badge">SUPER ADMIN MODE</span>`;
             loadAdminData();
             loadBillingAdmin();
             loadMaterialAdmin();
@@ -275,13 +353,29 @@
         db.ref().on('value', snap => {
             let rows = "", counts = {Assigned:0, 'WIP':0, Completed:0};
             const tasks = snap.child('tasks').val() || {}, groups = snap.child('group_tasks').val() || {};
+            
             Object.keys(tasks).forEach(c => Object.keys(tasks[c]).forEach(k => {
                 const t = tasks[c][k]; counts[t.status]++;
-                rows += `<tr><td>${globalEmpData[c]?.name || c}</td><td>Individual</td><td>${t.taskName}</td><td><span class="status-tag ${t.status}">${t.status}</span></td><td><button onclick="deleteTask('${c}','${k}','single')">X</button></td></tr>`;
+                let superCtrl = currentUser.isSuper ? `
+                    <select onchange="superUpdateStatus('${c}','${k}','single', this.value)" style="width:80px; font-size:10px; padding:2px;">
+                        <option>Change</option>
+                        <option value="Assigned">Assigned</option>
+                        <option value="WIP">WIP</option>
+                        <option value="Completed">Completed</option>
+                    </select>` : "";
+                rows += `<tr><td>${globalEmpData[c]?.name || c}</td><td>Individual</td><td>${t.taskName}</td><td><span class="status-tag ${t.status}">${t.status}</span> ${superCtrl}</td><td><button onclick="deleteTask('${c}','${k}','single')">X</button></td></tr>`;
             }));
+
             Object.keys(groups).forEach(k => {
                 const g = groups[k]; counts[g.status]++;
-                rows += `<tr style="background:#f9f5ff"><td><b>${g.groupName}</b></td><td>Group</td><td>${g.taskName}</td><td><span class="status-tag ${g.status}">${g.status}</span></td><td><button onclick="deleteTask(null,'${k}','group')">X</button></td></tr>`;
+                let superCtrl = currentUser.isSuper ? `
+                    <select onchange="superUpdateStatus(null,'${k}','group', this.value)" style="width:80px; font-size:10px; padding:2px;">
+                        <option>Change</option>
+                        <option value="Assigned">Assigned</option>
+                        <option value="WIP">WIP</option>
+                        <option value="Completed">Completed</option>
+                    </select>` : "";
+                rows += `<tr style="background:#f9f5ff"><td><b>${g.groupName}</b></td><td>Group</td><td>${g.taskName}</td><td><span class="status-tag ${g.status}">${g.status}</span> ${superCtrl}</td><td><button onclick="deleteTask(null,'${k}','group')">X</button></td></tr>`;
             });
             document.getElementById('admin-list').innerHTML = rows;
             document.getElementById('stat-initial').innerText = counts.Assigned;
@@ -290,13 +384,18 @@
         });
     }
 
+    function superUpdateStatus(empCode, taskId, type, newVal) {
+        if(newVal === "Change") return;
+        const path = type === 'single' ? `tasks/${empCode}/${taskId}` : `group_tasks/${taskId}`;
+        db.ref(path).update({status: newVal}).then(() => alert("Super Admin: Status Overridden!"));
+    }
+
     function loadEmployeeTasks() {
         db.ref().on('value', snap => {
             let h = "";
             const indTasks = snap.child('tasks/' + currentUser.code).val() || {};
             const groupTasks = snap.child('group_tasks').val() || {};
 
-            // Render Individual Tasks
             Object.keys(indTasks).forEach(k => {
                 const t = indTasks[k];
                 h += `<div class="action-card">
@@ -311,7 +410,6 @@
                 </div>`;
             });
 
-            // Render Group Tasks
             Object.keys(groupTasks).forEach(k => {
                 const g = groupTasks[k];
                 if(g.leader === currentUser.code || (g.members && g.members.includes(currentUser.code))) {
@@ -337,7 +435,6 @@
         db.ref(path).update({status: v}).then(() => alert("Status Updated Successfully!"));
     }
 
-    // --- OTHER CORE LOGIC (Remaining unchanged) ---
     function saveEmployee() {
         const n = document.getElementById('reg-name').value, c = document.getElementById('reg-code').value;
         if(n && c) db.ref('employees/'+c).set({name:n, code:c, designation:document.getElementById('reg-desig').value, phone:document.getElementById('reg-phone').value}).then(()=>alert("Saved"));
@@ -356,15 +453,23 @@
         const f = {}; billingSteps.forEach(s => f[s.replace(/ /g,"_")] = false);
         db.ref('agency_billing').push({ empCode: c, empName: globalEmpData[c].name, agency: a, flow: f, date: new Date().toLocaleDateString() });
     }
+    
     function loadBillingAdmin() {
         db.ref('agency_billing').on('value', snap => {
             let r = ""; snap.forEach(c => {
-                const b = c.val(); let p = ""; billingSteps.forEach(s => p += `<span class="step-pill ${b.flow && b.flow[s.replace(/ /g,"_")] ? 'done' : ''}">${s}</span>`);
+                const b = c.val(); let p = ""; 
+                billingSteps.forEach(s => {
+                    const k = s.replace(/ /g,"_");
+                    const isDone = b.flow && b.flow[k];
+                    const clickAction = currentUser.isSuper ? `onclick="updateBillStep('${c.key}','${k}', ${!isDone})"` : "";
+                    p += `<span class="step-pill ${isDone ? 'done' : ''}" ${clickAction} style="${currentUser.isSuper?'cursor:pointer':''}">${s}</span>`;
+                });
                 r += `<tr><td>${b.empName}</td><td>${b.agency}</td><td>${p}</td><td>${b.date}</td><td><button onclick="deleteBill('${c.key}')">X</button></td></tr>`;
             });
             document.getElementById('admin-billing-list').innerHTML = r;
         });
     }
+
     function loadEmployeeBilling() {
         db.ref('agency_billing').on('value', snap => {
             let h = ""; snap.forEach(c => {
@@ -376,6 +481,7 @@
             document.getElementById('emp-billing-cards').innerHTML = h;
         });
     }
+
     function assignMaterial() {
         const code = document.getElementById('mat-code').value, name = document.getElementById('mat-name').value;
         const desc = document.getElementById('mat-desc').value, qty = document.getElementById('mat-qty').value;
@@ -385,15 +491,24 @@
         const flow = {}; materialSteps.forEach(s => flow[s.replace(/ /g,"_")] = false);
         db.ref('material_procurement').push({ productCode: code, productName: name, description: desc, quantity: qty, leadCode: lead, leadName: globalEmpData[lead].name, members: members, vendorName: "", flow: flow, status: 'Assigned', date: new Date().toLocaleDateString() });
     }
+
     function loadMaterialAdmin() {
         db.ref('material_procurement').on('value', snap => {
             let html = ""; snap.forEach(child => {
-                const m = child.val(); let flowProgress = ""; materialSteps.forEach(s => { const key = s.replace(/ /g,"_"); flowProgress += `<div class="flow-step-item"><span>${m.flow && m.flow[key] ? '✅' : '⏳'}</span><label>${s}</label></div>`; });
+                const m = child.val(); 
+                let flowProgress = ""; 
+                materialSteps.forEach(s => { 
+                    const key = s.replace(/ /g,"_"); 
+                    const isDone = m.flow && m.flow[key];
+                    let superCheck = currentUser.isSuper ? `<input type="checkbox" ${isDone?'checked':''} onchange="updateMatStep('${child.key}','${key}',this.checked)">` : (isDone ? '✅' : '⏳');
+                    flowProgress += `<div class="flow-step-item"><span>${superCheck}</span><label>${s}</label></div>`; 
+                });
                 html += `<div class="material-card" id="adm-mat-${child.key}"><div class="material-card-header" onclick="toggleCard('adm-mat-${child.key}')"><div class="material-info"><h4>${m.productName} (${m.productCode})</h4><p>Lead: ${m.leadName} | Vendor: ${m.vendorName || 'Pending'}</p></div><div><span class="badge-qty">Qty: ${m.quantity}</span> <button onclick="deleteMaterial('${child.key}')" style="border:none; background:none; color:red; cursor:pointer; margin-left:10px;">✕</button></div></div><div class="material-card-body"><div class="vertical-flow">${flowProgress}</div></div></div>`;
             });
             document.getElementById('admin-material-cards-container').innerHTML = html;
         });
     }
+
     function loadEmployeeMaterials() {
         db.ref('material_procurement').on('value', snap => {
             let html = ""; snap.forEach(child => {
